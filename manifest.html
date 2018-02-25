@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Manifest </title>
+    {% include 'navbar.html' %}
+
+
+      <div class="container-fluid">
+         <div class="row flex-xl-nowrap">
+             <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+                 <div class="btn-group dropright">
+                     <div class="btn-group dropright">
+                        <button type="button" class="btn btn-primary">
+                            Add Jumper
+                        </button>
+                         <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropright</span>
+                         </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        {% for jumper in jumpers %}
+                            <a class="dropdown-item" href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{jumper.key.id()}}&action=add">{{jumper.name}}</a>
+                        {% endfor %}
+                        </div>
+                     </div>
+                 </div>
+            </div>
+            <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" role="main">
+                    {% set slots = slot_mega[load.key.id()] %}
+                <div class="card">
+                    <div class="card-body bg-primary text-white">
+                     <h5 class="card-title">Load Number {{load.number}}</h5>
+                     <h5 class="card-subtitle mb-2 ">Time {{load.time.strftime("%H:%M")}} </h5>
+                        <p class="card-text"> Status : {{load.status}}</p>
+                        <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
+                    </div>
+                </div>
+                <ul class="list-group">
+
+                    {% for slot in slots %}
+                        <li class="list-group-item">
+                            <div class="row justify-content-between">
+                                <div class="col-4">
+                                    <div class="card">
+                                        <div class="card-body bg-">
+                                            <h5 class="card-title">
+                                                {{slot.name}}
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="="col-4>
+                                    <a class="btn btn-outline-primary" href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=details" role="button">View Details</a>
+                                    <a class="btn btn-outline-warning" href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=delete" role="button">Remove</a>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+            </main>
+         </div>
+      </div>
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  {% if message %}<script>$('#MessageModal').modal('show')</script> {% endif %}
+      </body>
+</html>

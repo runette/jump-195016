@@ -1,0 +1,16 @@
+indexes:
+- kind: Load
+  properties:
+  - name: date
+  - name: number
+
+- kind: Load
+  properties:
+  - name: dropzone
+  - name: number
+
+- kind: Registration
+  properties:
+  - name: current
+  - name: dropzone
+  - name: jumper

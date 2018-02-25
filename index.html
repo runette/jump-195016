@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+      <title>Jump MainPage </title>
+    {% include 'navbar.html' %}
+
+<div class="container-fluid">
+      <div class="row flex-xl-nowrap">
+        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+            <div class="list-group">
+                {% if dropzone.name != "null" %}
+                    <a  class="list-group-item list-group-item-action bg-primary text-white"href="/startday?dropzone={{dropzone.key.id()}}" role="button"> Start the Day </a>
+                    <a  class="list-group-item list-group-item-action bg-primary text-white"href="/endday?dropzone={{dropzone.key.id()}}" role="button"> End the Day </a>
+                {% endif %}
+            </div>
+        </div>
+        <main>
+           <div class="jumbotron jumbotron-fluid">
+                <div class="container">
+                    {% if dropzone.name != "null" %}
+                        <h1 class="display-4 text-centre">{{dropzone.name}} is {{dropzone.status}}</h1>
+                        <p class="lead text-justify">Use the Start of Day and End of Day buttons to open and close the dropzone for jumping.</p>
+                    {% else %}
+                        <h1 class="display-4 text-centre">No User Logged IN</h1>
+                        <p class="lead text-justify">Please use the Login Button above</p>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+
+
+
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  {% if message %}<script>$('#MessageModal').modal('show')</script> {% endif %}
+          </body>
+</html>

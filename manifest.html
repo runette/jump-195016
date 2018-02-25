@@ -5,6 +5,8 @@
     {% include 'navbar.html' %}
 
 
+
+
       <div class="container-fluid">
          <div class="row flex-xl-nowrap">
              <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
@@ -34,28 +36,45 @@
                         <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
                     </div>
                 </div>
-                <ul class="list-group">
+                <div class="table-responsive">
+                 <table class="table table-hover" >
+                     <thead>
+                        <tr class="row justify-content-between">
+                            <th scope="col-4"></th>
+                            <th scope="col-4"></th>
+                        </tr>
+                      </thead>
+                    <tbody id="scroll-table">
 
                     {% for slot in slots %}
-                        <li class="list-group-item">
-                            <div class="row justify-content-between">
-                                <div class="col-4">
+                            <tr>
+                                <td>
                                     <div class="card">
                                         <div class="card-body bg-">
                                             <h5 class="card-title">
-                                                {{slot.name}}
+                                                <div class="row">
+                                                    <div class="col">
+                                                        {{loop.index}}
+                                                    </div>
+                                                    <div class="col">
+                                                         {{slot.name}}
+                                                    </div>
+                                                </div>
                                             </h5>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="="col-4>
+                                </td>
+                                <td>
                                     <a class="btn btn-outline-primary" href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=details" role="button">View Details</a>
                                     <a class="btn btn-outline-warning" href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=delete" role="button">Remove</a>
-                                </div>
-                            </div>
-                        </li>
+
+                                </td>
+                            </tr>
+
                     {% endfor %}
-                </ul>
+                </tbody>
+                </table>
+                </div>
 
             </main>
          </div>
@@ -63,12 +82,4 @@
 
 
 
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  {% if message %}<script>$('#MessageModal').modal('show')</script> {% endif %}
-      </body>
-</html>
+{% include 'scripts.html' %}

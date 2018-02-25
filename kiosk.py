@@ -22,7 +22,7 @@ import jinja2
 from google.appengine.ext import ndb
 from google.appengine.api import users
 import datetime
-import main
+from data import *
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(

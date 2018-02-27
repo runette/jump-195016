@@ -6,7 +6,7 @@ from google.appengine.ext import ndb
 
 #[START Global variables]
 
-DEFAULT_DROPZONE_NAME = "null"
+DEFAULT_DROPZONE_NAME = "No Dropzone"
 DEFAULT_DROPZONE_ID = 0
 DEFAULT_DROPZONE_STATUS = "No Status"
 DROPZONE_OPEN = "Open"
@@ -37,6 +37,32 @@ class Load(ndb.Model):
     @classmethod
     def get_loads (cls, dropzone_key) :
         return cls.query(Load.date == datetime.date.today(),Load.dropzone == dropzone_key).order(Load.number)
+
+    @classmethod
+    def add_load (cls, loads, dropzone_key) :
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        last = len(loads) - 1
+        time_increment = datetime.timedelta(minutes=dropzone.defaultloadtime)
+        if last >= 0:
+            load = Load(number=loads[last].number + 1,
+                        slots=dropzone.defaultloadnumber,
+                        precededby=loads[last].key.id(),
+                        status=LOAD_STATUS[0],
+                        time=(datetime.datetime.combine(datetime.date(1, 1, 1),
+                                                        loads[last].time) + time_increment).time(),
+                        dropzone=dropzone_key
+                        )
+        else:
+            load = Load(
+                number=1,
+                slots=dropzone.defaultloadnumber,
+                precededby=-1,
+                status=LOAD_STATUS[0],
+                time=(datetime.datetime.now() + time_increment).time(),
+                dropzone=dropzone_key
+            )
+        return load
+
 
 
 class Manifest(ndb.Model):

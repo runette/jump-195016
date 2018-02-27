@@ -13,7 +13,7 @@ handlers:
   script: kiosk.app
 
 - url: .*
-  script: main.app
+  script: manage.app
 
 - url: /bootstrap
   static_dir: bootstrap

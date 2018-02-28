@@ -39,11 +39,7 @@ class MainPage(webapp2.RequestHandler):
             dropzone_key = User.get_user(user.email()).fetch()[0].dropzone
             dropzone = Dropzone.get_by_id(dropzone_key)
         else:
-            dropzone = Dropzone(
-                name=DEFAULT_DROPZONE_NAME,
-                status=DROPZONE_CLOSED,
-                key=0
-            )
+            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
 
         template_values = {
             'user_data': user_data,
@@ -63,12 +59,13 @@ class StartDay(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.status = DROPZONE_OPEN
             Dropzone.put(dropzone)
+            for i in range(dropzone.defaultloadnumber):
+                loads = Load.get_loads(dropzone_key).fetch()
+                Load.add_load(loads, dropzone_key).put()
+
         else:
-            dropzone = Dropzone(
-                name=DEFAULT_DROPZONE_NAME,
-                status=DROPZONE_CLOSED,
-                key=0
-            )
+            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
+
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -82,17 +79,14 @@ class EndDay(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
+        # change status to closed and delete all loads that did not take off
         if user:
             dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
             dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.status = DROPZONE_CLOSED
-            loads = Load.get_loads(dropzone_key)
+            loads = Load.get_loads(dropzone_key).fetch()
         else:
-            dropzone = Dropzone(
-                name=DEFAULT_DROPZONE_NAME,
-                status=DROPZONE_CLOSED,
-                key=0
-            )
+            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = []
         for load in loads:
             if load.status == LOAD_STATUS[0] or load.status == LOAD_STATUS[2]:
@@ -120,29 +114,6 @@ class ManageSales(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
 
-        # class redundant (webapp2.RequestHandler):
-        #    def get(self):
-        #        user_data = UserStatus(self.request.uri)
-        #        user = user_data['user']
-        #        # GET Parameters
-        #        dropzone_key = int(self.request.get('dropzone',DEFAULT_DROPZONE_ID))
-        #        # Get Dropzone details
-        #        dropzone = Dropzone.get_by_id(dropzone_key)
-        #        #Get loads
-        #        loads = Load.get_loads(dropzone_key).fetch()
-        #        slot_mega = LoadStructure(loads)#
-
-        #template_values = {
-        #    'user_data': user_data,
-        #    'dropzone': dropzone,
-        #    'loads': loads,
-        #    'slot_mega': slot_mega,
-        #    'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
-
-        #}
-        #template = JINJA_ENVIRONMENT.get_template('loads.html')
-        #self.response.write(template.render(template_values))
-
 
 class ManageLoads(webapp2.RequestHandler):
     def get(self):
@@ -168,7 +139,6 @@ class ManageLoads(webapp2.RequestHandler):
                 message.update({'title': "Cannot Add"})
                 message.update(
                     {'body': dropzone.name + " is currently closed so new loads cannot be added "})
-
         if action == "landed":
             load = Load.get_by_id(load_key)
             load.status = LOAD_STATUS[3]
@@ -193,44 +163,23 @@ class ManageLoads(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
 
+
 class ManageManifest(webapp2.RequestHandler):
-    def get(self):
-        user_data = UserStatus(self.request.uri)
-        # GET PARAMATERS
-        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
-        load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
-        # Set the Dropone details
-        dropzone = Dropzone.get_by_id(dropzone_key)
-        # Set the Load Details
-        load = Load.get_by_id(load_key)
-        loads = [load]
-        slot_mega = LoadStructure(loads)
-
-        template_values = {
-            'user_data': user_data,
-            'dropzone': dropzone,
-            'load': load,
-            'slot_mega': slot_mega,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
-            'jumpers': JumperStructure(dropzone_key)
-        }
-        template = JINJA_ENVIRONMENT.get_template('manifest.html')
-        self.response.write(template.render(template_values))
-
-
-class ManifestAction(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         # GET PARAMETERS
         dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
-        jumper_key = int(self.request.get('jumper'))
+        jumper_key = self.request.get('jumper')
         message = {}
+        if jumper_key:
+            jumper_key = int(jumper_key)
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
 
         # Set the Load Details
+
         load = Load.get_by_id(load_key)
         loads = [load]
         slot_mega = LoadStructure(loads)
@@ -277,7 +226,7 @@ app = webapp2.WSGIApplication([
     ('/sales', ManageSales),
     ('/manifest', ManageManifest),
     ('/loadaction', ManageLoads),
-    ('/manifestaction', ManifestAction),
+    ('/manifestaction', ManageManifest),
     ('/jumpers', ManageJumpers)
 
 ], debug=True)

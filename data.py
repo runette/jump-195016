@@ -6,9 +6,9 @@ from google.appengine.ext import ndb
 
 #[START Global variables]
 
-DEFAULT_DROPZONE_NAME = "No Dropzone"
-DEFAULT_DROPZONE_ID = 0
-DEFAULT_DROPZONE_STATUS = "No Status"
+DEFAULT_DROPZONE_NAME = "No Dropzone"  # deprecated
+DEFAULT_DROPZONE_ID = 5659313586569216
+DEFAULT_DROPZONE_STATUS = "No Status"  # deprecated
 DROPZONE_OPEN = "Open"
 DROPZONE_CLOSED = "Closed"
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
@@ -22,6 +22,7 @@ class Dropzone(ndb.Model):
     name = ndb.StringProperty()
     defaultloadtime = ndb.IntegerProperty()
     defaultloadnumber = ndb.IntegerProperty()
+    defaultslotnumber = ndb.IntegerProperty()
     status = ndb.StringProperty()
 
 
@@ -45,7 +46,7 @@ class Load(ndb.Model):
         time_increment = datetime.timedelta(minutes=dropzone.defaultloadtime)
         if last >= 0:
             load = Load(number=loads[last].number + 1,
-                        slots=dropzone.defaultloadnumber,
+                        slots=dropzone.defaultslotnumber,
                         precededby=loads[last].key.id(),
                         status=LOAD_STATUS[0],
                         time=(datetime.datetime.combine(datetime.date(1, 1, 1),

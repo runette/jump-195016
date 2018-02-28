@@ -17,7 +17,7 @@
         <main>
            <div class="jumbotron jumbotron-fluid">
                 <div class="container">
-                    {% if dropzone.name != "null" %}
+                    {% if dropzone.status != "null" %}
                         <h1 class="display-4 text-centre">{{dropzone.name}} is {{dropzone.status}}</h1>
                         <p class="lead text-justify">Use the Start of Day and End of Day buttons to open and close the dropzone for jumping.</p>
                     {% else %}

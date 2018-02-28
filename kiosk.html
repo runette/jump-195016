@@ -1,19 +1,140 @@
 <!doctype html>
 <html lang="en">
   <head>
-      <title>TODO : PAGETITLE </title>
-    {% include 'navbar.html' %}
+      <title>Jump Kiosk Page </title>
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<div class="container-fluid">
-      <div class="row flex-xl-nowrap">
-        <div class="col-4 col-md-3 col-xl-2 bd-sidebar">
-            <div class="list-group">
-            </div>
-        </div>
-        <main>
+      <!-- [START css] -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-        </main>
+      <!-- [END css] -->
+
+  </head>
+  <body>
+
+  <header class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <a class="navbar-brand" href="/">Jump Dropzone Management</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+
+          <div class="row">
+              <div class="col navbar-brand">
+                  {{dropzone.name}}
+              </div>
+              <div class="col navbar-brand">
+                  {{dropzone.status}}
+              </div>
+
+          </div>
       </div>
-</div>
+  </header>
 
-{% include 'scripts.html' %}
+  <main>
+      <div class="container-fluid">
+          <div class="row ">
+              {% for i in range(load_len) %}
+              <div class="col-4 ">
+                  {% set load = next_loads[i] %}
+                  {% set slots = slot_mega[load.key.id()] %}
+                  <div class="card">
+                      <div class="card-body bg-primary text-white">
+                          <h5 class="card-title">Load Number {{load.number}}</h5>
+                          <h5 class="card-subtitle mb-2 ">Time {{load.time.strftime("%H:%M")}} </h5>
+                          <p class="card-text"> Status : {{load.status}}</p>
+                          <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
+                      </div>
+                  </div>
+                  <div class="table-responsive">
+                      <table class="table table-hover">
+                          <thead>
+                          <tr class="row justify-content-between">
+                              <th scope="col-4"></th>
+                          </tr>
+                          </thead>
+                          <tbody id="scroll-table">
+
+                          {% for slot in slots %}
+                          <tr>
+                              <td>
+                                  <div class="card">
+                                      <div class="card-body bg-">
+                                          <h5 class="card-title">
+                                              <div class="row">
+                                                  <div class="col">
+                                                      {{loop.index}}
+                                                  </div>
+                                                  <div class="col">
+                                                      {{slot.name}}
+                                                  </div>
+                                              </div>
+                                          </h5>
+                                      </div>
+                                  </div>
+                              </td>
+
+                          </tr>
+
+                          {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              {% endfor %}
+      </div>
+      </div>
+  </main>
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+          integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+          crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+          integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+          crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+          integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+          crossorigin="anonymous"></script>
+  <script type="text/javascript">
+      {# var $el = $('#scroll-table');
+
+          function anim() {
+              var st = $el.scrollTop();
+              var sb = $el.prop("scrollHeight") - $el.innerHeight();
+              $el.animate({scrollTop: st < sb / 2 ? sb : 0}, 4000, anim);
+          }
+
+          function stop() {
+              $el.stop();
+          }
+
+          anim();
+          $el.hover(stop, anim); #
+      }
+
+      $.fn.infiniteScrollUp = function () {
+          var self = this, kids = self.children();
+          kids.slice(2).hide();
+          setInterval(function () {
+              var show_this = kids.filter(':hidden').eq(0);
+              show_this.show();
+              kids.eq(0).hide("slow",
+                  $(this).appendTo(self)
+              );
+              kids = self.children()
+          }, 1000);
+          return this
+      };
+      $(function () {
+          $('#scroll-table').infiniteScrollUp()
+      })
+
+  </script>
+  </body>
+</html>

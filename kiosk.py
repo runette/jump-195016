@@ -16,12 +16,8 @@
     # [START imports]
 
 import os
-import urllib
 import webapp2
 import jinja2
-from google.appengine.ext import ndb
-from google.appengine.api import users
-import datetime
 from data import *
 
 
@@ -33,13 +29,43 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 # [END Imports]
 
 #[START Global variables]
-
+    KIOSK_NUMBER_OF_COLUMNS = 3
 
 
 #[END Global variables]
 
 class Kiosk (webapp2.RequestHandler):
-    a=1
+    def get(self):
+        # GET PARAMETERS
+        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
+        # Set the Dropzone details
+        dropzone = Dropzone.get_by_id(dropzone_key)
+
+        if dropzone:
+            loads = Load.get_loads(dropzone_key).fetch()
+            slot_mega = LoadStructure(loads)
+            next_loads = []
+            for load in loads:
+                if load.status == LOAD_STATUS[3]:
+                    continue
+                else:
+                    next_loads.append(load)
+        else:
+            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
+            loads = Load.get_loads(DEFAULT_DROPZONE_ID).fetch()
+        load_len = min(len(next_loads), KIOSK_NUMBER_OF_COLUMNS)
+
+        template_values = {
+            'dropzone': dropzone,
+            'next_loads': next_loads,
+            'slot_mega': slot_mega,
+            'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
+            'load_len': load_len
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('kiosk.html')
+        self.response.write(template.render(template_values))
+
 
 
 app = webapp2.WSGIApplication([

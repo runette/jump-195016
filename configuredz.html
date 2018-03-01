@@ -7,11 +7,20 @@
     <div class="container-fluid">
         <div class="row flex-xl-nowrap">
             <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
-                <div class="list-group">
+                <div class="list-group" id="list-tab" role="tablist">
+                    <a class="list-group-item list-group-item-action active" id="list-dz-list" data-toggle="list"
+                       href="#list-dz" role="tab" aria-controls="dz">Dropzone Configuration</a>
+                    <a class="list-group-item list-group-item-action" id="list-users-list" data-toggle="list"
+                       href="#list-users" role="tab" aria-controls="users">User Configuration</a>
+                    <a class="list-group-item list-group-item-action" id="list-kiosk-list" data-toggle="list"
+                       href="#list-kiosk" role="tab" aria-controls="kiosk">Kiosk Configuration</a>
                 </div>
             </div>
-            <main>
 
+            <main>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="list-dz" role="tabpanel" aria-labelledby="list-dz-list">
+                        <h1>Dropzone Configuration</h1>
                 <form action="/updatedz?dropzone={{dropzone.key.id()}}" method="post">
                     <div class="form-group row">
                         <label for="dropzone_name" class="col-4 col-form-label">Dropzone Name</label>
@@ -64,6 +73,64 @@
                         </div>
                     </div>
                 </form>
+                    </div>
+                    <div class="tab-pane fade" id="list-users" role="tabpanel" aria-labelledby="list-users-list">
+                        <h1>User Configuration</h1>
+                        <div class="row">
+                            <div class="col">
+                                <form action="/updateuser?dropzone={{dropzone.key.id()}}" method="post">
+                                    <div class="form-group row">
+                                        <label for="user_email" class="col-4 col-form-label">User Email</label>
+                                        <div class="col-8">
+                                            <div class="input-group">
+                                                <input id="user_email" name="user_email" type="text"
+                                                       class="form-control here">
+                                                <div class="input-group-addon append">@gmail.com</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="user_role" class="col-4 col-form-label">Role</label>
+                                        <div class="col-8">
+                                            <select id="user_role" name="user_role" class="custom-select">
+                                                {% for role in user_roles %}
+                                                <option value="{{loop.index}}">{{role}}</option>
+                                                {% endfor %}}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="offset-4 col-8">
+                                            <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col">
+                                <ul class="list-group">
+                                    {% for user in users %}
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col">
+                                                {{user.name}}
+                                            </div>
+                                            <div class="col">
+                                                {{user_roles[user.role]}}
+                                            </div>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="list-kiosk" role="tabpanel" aria-labelledby="list-kiosk-list">
+                        <h1>Kiosk Configuration</h1>
+                        TEST
+                    </div>
+
+                </div>
             </main>
         </div>
     </div>

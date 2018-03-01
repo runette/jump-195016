@@ -14,3 +14,8 @@ indexes:
   - name: current
   - name: dropzone
   - name: jumper
+
+- kind: User
+  properties:
+  - name: dropzone
+  - name: name

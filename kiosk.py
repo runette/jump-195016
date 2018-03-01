@@ -23,13 +23,14 @@ from data import *
     # [END Imports]
 
     # [START Global variables]
+    KIOSK_NUMBER_OF_COLUMNS = 4
+    SLICE_SIZE = 4
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-    KIOSK_NUMBER_OF_COLUMNS = 4
-    SLICE_SIZE = 4
+
 
 
 #[END Global variables]

@@ -44,6 +44,7 @@ class MainPage(webapp2.RequestHandler):
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
+            'active': 0
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -69,6 +70,7 @@ class StartDay(webapp2.RequestHandler):
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
+            'active': 0
 
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -95,6 +97,7 @@ class EndDay(webapp2.RequestHandler):
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
+            'active': 0
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -109,7 +112,8 @@ class ManageSales(webapp2.RequestHandler):
 
         template_values = {
             'user_data': user_data,
-            'dropzone': dropzone
+            'dropzone': dropzone,
+            'active': 2
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -158,6 +162,7 @@ class ManageLoads(webapp2.RequestHandler):
             'slot_mega': slot_mega,
             'message': message,
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'active': 1
         }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
@@ -208,7 +213,8 @@ class ManageManifest(webapp2.RequestHandler):
             'slot_mega': LoadStructure(loads),
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
             'jumpers': JumperStructure(dropzone_key),
-            'message': message
+            'message': message,
+            'active': 1
         }
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render(template_values))
@@ -221,17 +227,26 @@ class ManageJumpers(webapp2.RequestHandler):
 class ManageDz(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        user = user_data['user']
-        if user:
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        message = {}
+        if user.role == ADMIN:
             # Get the dropzone details based on the user
-            dropzone_key = User.get_user(user.email()).fetch()[0].dropzone
+            dropzone_key = int(self.request.get('dropzone'))
             dropzone = Dropzone.get_by_id(dropzone_key)
         else:
-            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
+            dropzone_key = DEFAULT_DROPZONE_ID
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            message.update({'title': "Not Administrator"})
+            message.update({'body': "You do not have administrator rights"})
 
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
+            'users': User.get_by_dropzone(dropzone_key).fetch(),
+            'message': message,
+            'user_roles': USER_ROLES,
+            'active': 4
+
         }
         template = JINJA_ENVIRONMENT.get_template('configuredz.html')
         self.response.write(template.render(template_values))
@@ -240,17 +255,39 @@ class ManageDz(webapp2.RequestHandler):
 class UpdateDz(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
-        user = user_data['user']
-        if user:
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        dropzone_key = int(self.request.get('dropzone'))
+        if user.role == ADMIN:
             # GET PARAMETERS
-            dropzone_key = int(self.request.get('dropzone'))
             dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.name = self.request.get('dropzone_name')
             dropzone.defaultslotnumber = int(self.request.get('default_slot_number'))
             dropzone.defaultloadnumber = int(self.request.get('default_load_number'))
             dropzone.defaultloadtime = int(self.request.get('default_load_time'))
             dropzone.put()
-            self.redirect('/')
+        self.redirect('/configdz?dropzone=' + str(dropzone_key))
+
+
+class UpdateUser(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        dropzone_key = int(self.request.get('dropzone'))
+        if user.role == ADMIN:
+            # GET PARAMETERS
+            user_update = User.get_user(self.request.get('user_email') + "@gmail.com").fetch()
+            if user_update:
+                user_update[0].role = int(self.request.get('user_role')) - 1
+                user_update[0].dropzone = dropzone_key
+                user_update[0].put()
+            else:
+                user_update = User(
+                    name=self.request.get('user_email') + "@gmail.com",
+                    dropzone=dropzone_key,
+                    role=int(self.request.get('user_role')) - 1
+                )
+                user_update.put()
+        self.redirect('/configdz?dropzone=' + str(dropzone_key))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -263,6 +300,7 @@ app = webapp2.WSGIApplication([
     ('/manifestaction', ManageManifest),
     ('/jumpers', ManageJumpers),
     ('/configdz', ManageDz),
-    ('/updatedz', UpdateDz)
+    ('/updatedz', UpdateDz),
+    ('/updateuser', UpdateUser)
 
 ], debug=True)

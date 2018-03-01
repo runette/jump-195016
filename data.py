@@ -14,6 +14,11 @@ DROPZONE_CLOSED = "Closed"
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
 DEFAULT_LOAD_ID = 0
 REGISTRATION_STATUS = ["Current", "Not Current"]
+USER_ROLES = ["admin", "manifest", "sales", "view"]  # - admin, manifest, sales, view
+ADMIN = 0
+MANIFEST = 1
+SALES = 2
+VIEW = 3
 
 #[END Global variables]
 
@@ -78,10 +83,15 @@ class Manifest(ndb.Model):
 class User(ndb.Model):
     name = ndb.StringProperty()
     dropzone = ndb.IntegerProperty()
+    role = ndb.IntegerProperty()
 
     @classmethod
     def get_user (cls, name) :
         return cls.query(User.name == name)
+
+    @classmethod
+    def get_by_dropzone(cls, dropzone_key):
+        return cls.query(User.dropzone == dropzone_key).order(User.name)
 
 
 class Registration(ndb.Model) :

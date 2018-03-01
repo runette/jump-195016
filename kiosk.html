@@ -5,6 +5,7 @@
       <!-- Required meta tags -->
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <meta http-equiv="refresh" content="10"/>
 
       <!-- [START css] -->
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -39,7 +40,7 @@
       <div class="container-fluid">
           <div class="row ">
               {% for i in range(load_len) %}
-              <div class="col-4 ">
+              <div class="col-3">
                   {% set load = next_loads[i] %}
                   {% set slots = slot_mega[load.key.id()] %}
                   <div class="card">
@@ -57,7 +58,7 @@
                               <th scope="col"></th>
                           </tr>
                           </thead>
-                          <tbody id="scroll-table">
+                          <tbody id="scroll{{i}}">
 
                           {% for slot in slots %}
                           <tr>
@@ -115,25 +116,35 @@
           }
 
           anim();
-          $el.hover(stop, anim); #
+          $el.hover(stop, anim);
+      #
       }
 
       $.fn.infiniteScrollUp = function () {
           var self = this, kids = self.children();
-          kids.slice(2).hide();
+          kids.slice({;
+          {
+              slice
+          }
+      }).
+          hide();
           setInterval(function () {
               var show_this = kids.filter(':hidden').eq(0);
               show_this.show();
-              kids.eq(0).hide("slow",
-                  $(this).appendTo(self)
-              );
+              kids.eq(0).hide();
+              kids.eq(0).appendTo(self);
               kids = self.children()
-          }, 1000);
+          }, 3000);
           return this
       };
+      {%
+          for i in range(load_len) %}
       $(function () {
-          $('#scroll-table').infiniteScrollUp()
-      })
+          $('#scroll{{i}}').infiniteScrollUp()
+      });
+      {%
+          endfor %
+      }
 
   </script>
   </body>

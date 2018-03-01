@@ -6,34 +6,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   {% if message %}<script>$('#MessageModal').modal('show')</script> {% endif %}
     <script type="text/javascript">
-        {# var $el = $('#scroll-table');
-        function anim() {
-            var st = $el.scrollTop();
-            var sb = $el.prop("scrollHeight")-$el.innerHeight();
-            $el.animate({scrollTop: st<sb/2 ? sb : 0}, 4000, anim);
-        }
-        function stop(){
-            $el.stop();
-        }
-        anim();
-            $el.hover(stop, anim); #}
 
-            $.fn.infiniteScrollUp=function(){
-    		var self=this,kids=self.children()
-    		kids.slice(2).hide()
-    		setInterval(function(){
-    			var show_this=kids.filter(':hidden').eq(0)
-    		    show_this.show()
-    			kids.eq(0).hide("slow",
-    				    $(this).appendTo(self)
-                )
-                kids=self.children()
-    		},1000)
-    		return this
-    	}
-    	$(function(){
-    		$('#scroll-table').infiniteScrollUp()
-    	})
 
     </script>
     </body>

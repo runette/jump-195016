@@ -157,7 +157,7 @@ class ManageLoads(webapp2.RequestHandler):
             'loads': loads,
             'slot_mega': slot_mega,
             'message': message,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
+            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
         }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
@@ -183,7 +183,7 @@ class ManageManifest(webapp2.RequestHandler):
         load = Load.get_by_id(load_key)
         loads = [load]
         slot_mega = LoadStructure(loads)
-        slot_size = FreeSlots(loads, slot_mega, dropzone.defaultloadnumber)
+        slot_size = FreeSlots(loads, slot_mega, dropzone_key)
         if action == "add":
             if load.status in [LOAD_STATUS[0], LOAD_STATUS[2]]:
                 if slot_size[load.key.id()] > 0:
@@ -206,7 +206,7 @@ class ManageManifest(webapp2.RequestHandler):
             'dropzone': dropzone,
             'load': load,
             'slot_mega': LoadStructure(loads),
-            'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
+            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
             'jumpers': JumperStructure(dropzone_key),
             'message': message
         }
@@ -218,6 +218,40 @@ class ManageJumpers(webapp2.RequestHandler):
     a = 1
 
 
+class ManageDz(webapp2.RequestHandler):
+    def get(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            # Get the dropzone details based on the user
+            dropzone_key = User.get_user(user.email()).fetch()[0].dropzone
+            dropzone = Dropzone.get_by_id(dropzone_key)
+        else:
+            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
+
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+        }
+        template = JINJA_ENVIRONMENT.get_template('configuredz.html')
+        self.response.write(template.render(template_values))
+
+
+class UpdateDz(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            # GET PARAMETERS
+            dropzone_key = int(self.request.get('dropzone'))
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            dropzone.name = self.request.get('dropzone_name')
+            dropzone.defaultslotnumber = int(self.request.get('default_slot_number'))
+            dropzone.defaultloadnumber = int(self.request.get('default_load_number'))
+            dropzone.defaultloadtime = int(self.request.get('default_load_time'))
+            dropzone.put()
+            self.redirect('/')
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/loads', ManageLoads),
@@ -227,6 +261,8 @@ app = webapp2.WSGIApplication([
     ('/manifest', ManageManifest),
     ('/loadaction', ManageLoads),
     ('/manifestaction', ManageManifest),
-    ('/jumpers', ManageJumpers)
+    ('/jumpers', ManageJumpers),
+    ('/configdz', ManageDz),
+    ('/updatedz', UpdateDz)
 
 ], debug=True)

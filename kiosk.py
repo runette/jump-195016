@@ -20,16 +20,16 @@ import webapp2
 import jinja2
 from data import *
 
+    # [END Imports]
 
+    # [START Global variables]
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-# [END Imports]
-
-#[START Global variables]
-    KIOSK_NUMBER_OF_COLUMNS = 3
+    KIOSK_NUMBER_OF_COLUMNS = 4
+    SLICE_SIZE = 4
 
 
 #[END Global variables]
@@ -59,8 +59,9 @@ class Kiosk (webapp2.RequestHandler):
             'dropzone': dropzone,
             'next_loads': next_loads,
             'slot_mega': slot_mega,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone.defaultloadnumber),
-            'load_len': load_len
+            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'load_len': load_len,
+            'slice': SLICE_SIZE
         }
 
         template = JINJA_ENVIRONMENT.get_template('kiosk.html')

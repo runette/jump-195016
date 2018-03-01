@@ -117,11 +117,13 @@ def LoadStructure (loads) :
     return slot_mega
 
 
-def FreeSlots (loads, slot_mega, defaultslotnumber) :
+def FreeSlots(loads, slot_mega, dropzone_key):
     frees = {}
-    for load in loads :
-        free  = defaultslotnumber - len(slot_mega[load.key.id()])
-        frees.update({load.key.id():free})
+    slotnumber = Dropzone.get_by_id(dropzone_key).defaultslotnumber
+    if slotnumber:
+        for load in loads:
+            free = slotnumber - len(slot_mega[load.key.id()])
+            frees.update({load.key.id(): free})
     return frees
 
 

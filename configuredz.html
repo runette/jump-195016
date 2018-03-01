@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Manage DZ </title>
+    {% include 'navbar.html' %}
+
+    <div class="container-fluid">
+        <div class="row flex-xl-nowrap">
+            <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+                <div class="list-group">
+                </div>
+            </div>
+            <main>
+
+                <form action="/updatedz?dropzone={{dropzone.key.id()}}" method="post">
+                    <div class="form-group row">
+                        <label for="dropzone_name" class="col-4 col-form-label">Dropzone Name</label>
+                        <div class="col-8">
+                            <input id="dropzone_name" name="dropzone_name" type="text"
+                                   aria-describedby="dropzone_nameHelpBlock" required="required"
+                                   class="form-control here" value="{{dropzone.name}}">
+                            <span id="dropzone_nameHelpBlock" class="form-text text-muted">Enter the Dropzone Name to appear on the Nav Bar</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="default_slot_number" class="col-4 col-form-label">Default Slot Number per
+                            load</label>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input id="default_slot_number" name="default_slot_number"
+                                       value="{{dropzone.defaultslotnumber}}" type="text" required="required"
+                                       class="form-control here">
+                                <div class="input-group-addon append">slots per load</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="default_load_number" class="col-4 col-form-label">Autocreate Loads</label>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input id="default_load_number" name="default_load_number"
+                                       value="{{dropzone.defaultloadnumber}}" type="text"
+                                       aria-describedby="default_load_numberHelpBlock" class="form-control here">
+                                <div class="input-group-addon append">Loads</div>
+                            </div>
+                            <span id="default_load_numberHelpBlock" class="form-text text-muted">Number of loads to auto create at the start of the day.</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="default_load_time" class="col-4 col-form-label">Load Cycletime</label>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input id="default_load_time" name="default_load_time"
+                                       value="{{dropzone.defaultloadtime}}" type="text"
+                                       aria-describedby="default_load_timeHelpBlock" class="form-control here">
+                                <div class="input-group-addon append">minutes</div>
+                            </div>
+                            <span id="default_load_timeHelpBlock" class="form-text text-muted">Time interval between loads</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="offset-4 col-8">
+                            <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    {% include 'scripts.html' %}
+</html>

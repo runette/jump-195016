@@ -12,8 +12,14 @@ DEFAULT_DROPZONE_STATUS = "No Status"  # deprecated
 DROPZONE_OPEN = "Open"
 DROPZONE_CLOSED = "Closed"
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
+WAITING = 0
+FLYING = 1
+HOLD = 2
+LANDED = 3
 DEFAULT_LOAD_ID = 0
 REGISTRATION_STATUS = ["Current", "Not Current"]
+CURRENT = 0
+NOT_CURRENT = 1
 USER_ROLES = ["admin", "manifest", "sales", "view"]  # - admin, manifest, sales, view
 ADMIN = 0
 MANIFEST = 1
@@ -53,7 +59,7 @@ class Load(ndb.Model):
             load = Load(number=loads[last].number + 1,
                         slots=dropzone.defaultslotnumber,
                         precededby=loads[last].key.id(),
-                        status=LOAD_STATUS[0],
+                        status=LOAD_STATUS[WAITING],
                         time=(datetime.datetime.combine(datetime.date(1, 1, 1),
                                                         loads[last].time) + time_increment).time(),
                         dropzone=dropzone_key
@@ -63,7 +69,7 @@ class Load(ndb.Model):
                 number=1,
                 slots=dropzone.defaultloadnumber,
                 precededby=-1,
-                status=LOAD_STATUS[0],
+                status=LOAD_STATUS[WAITING],
                 time=(datetime.datetime.now() + time_increment).time(),
                 dropzone=dropzone_key
             )
@@ -78,6 +84,11 @@ class Manifest(ndb.Model):
     @classmethod
     def get_by_load(cls, load_key) :
         return cls.query(Manifest.load == load_key)
+
+    @classmethod
+    def delete_manifest(cls, load_key, jumper_key):
+        manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).fetch()
+        return manifest[0].key.delete()
 
 
 class User(ndb.Model):

@@ -91,7 +91,7 @@ class EndDay(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = []
         for load in loads:
-            if load.status == LOAD_STATUS[0] or load.status == LOAD_STATUS[2]:
+            if load.status == LOAD_STATUS[WAITING] or load.status == LOAD_STATUS[HOLD]:
                 DeleteLoad(load)
         Dropzone.put(dropzone)
         template_values = {
@@ -123,34 +123,49 @@ class ManageLoads(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         # GET PARAMETERS
-        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
         message = {}
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        dropzone_key = int(self.request.get('dropzone'))
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
         dropzone_status = dropzone.status
         # Set the Load Details
         loads = Load.get_loads(dropzone_key).fetch()
-        if action == "takeoff":
-            load = Load.get_by_id(load_key)
-            load.status = LOAD_STATUS[1]
-            load.put()
-        if action == "add":
-            if dropzone_status == DROPZONE_OPEN:
-                Load.add_load(loads, dropzone_key).put()
-            else:
-                message.update({'title': "Cannot Add"})
-                message.update(
-                    {'body': dropzone.name + " is currently closed so new loads cannot be added "})
-        if action == "landed":
-            load = Load.get_by_id(load_key)
-            load.status = LOAD_STATUS[3]
-            load.put()
-        if action == "hold":
-            load = Load.get_by_id(load_key)
-            load.status = LOAD_STATUS[2]
-            load.put()
+        if user.role == ADMIN or MANIFEST:
+            if action == "takeoff":
+                load = Load.get_by_id(load_key)
+                load.status = LOAD_STATUS[FLYING]
+                load.put()
+            if action == "add":
+                if dropzone_status == DROPZONE_OPEN:
+                    Load.add_load(loads, dropzone_key).put()
+                else:
+                    message.update({'title': "Cannot Add"})
+                    message.update(
+                        {'body': dropzone.name + " is currently closed so new loads cannot be added "})
+            if action == "landed":
+                load = Load.get_by_id(load_key)
+                load.status = LOAD_STATUS[LANDED]
+                load.put()
+            if action == "hold":
+                load = Load.get_by_id(load_key)
+                load.status = LOAD_STATUS[HOLD]
+                load.put()
+            if action == "delete":
+                load = Load.get_by_id(load_key)
+                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                    DeleteLoad(load)
+                else:
+                    message.update({'title': "Cannot Delete"})
+                    message.update(
+                        {'body': "Cannot delete loads that have taken off - use end of day function "})
+
+        else:
+            message.update({'title': "Cannot Manifest"})
+            message.update(
+                {'body': "You do not have Manifest rights "})
 
         # refresh loads
         loads = Load.get_loads(dropzone_key).fetch()
@@ -178,6 +193,7 @@ class ManageManifest(webapp2.RequestHandler):
         action = self.request.get('action')
         jumper_key = self.request.get('jumper')
         message = {}
+        user = User.get_user(user_data['user'].email()).fetch()[0]
         if jumper_key:
             jumper_key = int(jumper_key)
         # Set the Dropone details
@@ -189,22 +205,37 @@ class ManageManifest(webapp2.RequestHandler):
         loads = [load]
         slot_mega = LoadStructure(loads)
         slot_size = FreeSlots(loads, slot_mega, dropzone_key)
-        if action == "add":
-            if load.status in [LOAD_STATUS[0], LOAD_STATUS[2]]:
-                if slot_size[load.key.id()] > 0:
-                    manifest = Manifest(
-                        load=load_key,
-                        jumper=jumper_key
-                    )
-                    manifest.put()
+        if user.role == ADMIN or MANIFEST:
+            if action == "add":
+                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                    if slot_size[load.key.id()] > 0:
+                        manifest = Manifest(
+                            load=load_key,
+                            jumper=jumper_key
+                        )
+                        manifest.put()
 
+                    else:
+                        message.update({'title': "No Slots"})
+                        message.update({'body': "You cannot manifest on this load - there are no slots left"})
                 else:
-                    message.update({'title': "No Slots"})
-                    message.update({'body': "You cannot manifest on this load - there are no slots left"})
-            else:
-                message.update({'title': "Cannot Add"})
-                message.update(
-                    {'body': "This Load is not Open for Manifest. The Load status is \" " + load.status + "\""})
+                    message.update({'title': "Cannot Add"})
+                    message.update(
+                        {'body': "This Load is not Open for Manifest. The Load status is \" " + load.status + "\""})
+            if action == "delete":
+                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                    Manifest.delete_manifest(load_key, jumper_key)
+                else:
+                    message.update({'title': "Cannot Delete"})
+                    message.update(
+                        {'body': "Cannot delete loads that have taken off - use end of day function "})
+
+        else:
+            message.update({'title': "Cannot Manifest"})
+            message.update(
+                {'body': "You do not have Manifest rights "})
+
+
 
         template_values = {
             'user_data': user_data,

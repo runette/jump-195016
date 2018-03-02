@@ -47,7 +47,7 @@ class Kiosk (webapp2.RequestHandler):
             slot_mega = LoadStructure(loads)
             next_loads = []
             for load in loads:
-                if load.status == LOAD_STATUS[3]:
+                if load.status == LANDED:
                     continue
                 else:
                     next_loads.append(load)
@@ -62,7 +62,9 @@ class Kiosk (webapp2.RequestHandler):
             'slot_mega': slot_mega,
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
             'load_len': load_len,
-            'slice': SLICE_SIZE
+            'slice': SLICE_SIZE,
+            'dropzone_status': DROPZONE_STATUS,
+            'load_status': LOAD_STATUS
         }
 
         template = JINJA_ENVIRONMENT.get_template('kiosk.html')

@@ -9,8 +9,9 @@ from google.appengine.ext import ndb
 DEFAULT_DROPZONE_NAME = "No Dropzone"  # deprecated
 DEFAULT_DROPZONE_ID = 5659313586569216
 DEFAULT_DROPZONE_STATUS = "No Status"  # deprecated
-DROPZONE_OPEN = "Open"
-DROPZONE_CLOSED = "Closed"
+DROPZONE_STATUS = ["Open", "Closed"]
+OPEN = 0
+CLOSED = 1
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
 WAITING = 0
 FLYING = 1
@@ -20,7 +21,7 @@ DEFAULT_LOAD_ID = 0
 REGISTRATION_STATUS = ["Current", "Not Current"]
 CURRENT = 0
 NOT_CURRENT = 1
-USER_ROLES = ["admin", "manifest", "sales", "view"]  # - admin, manifest, sales, view
+USER_ROLES = ["Admin", "Manifest", "Sales", "View Only"]  # - admin, manifest, sales, view
 ADMIN = 0
 MANIFEST = 1
 SALES = 2
@@ -34,7 +35,7 @@ class Dropzone(ndb.Model):
     defaultloadtime = ndb.IntegerProperty()
     defaultloadnumber = ndb.IntegerProperty()
     defaultslotnumber = ndb.IntegerProperty()
-    status = ndb.StringProperty()
+    status = ndb.IntegerProperty()
 
 
 class Load(ndb.Model):
@@ -43,7 +44,7 @@ class Load(ndb.Model):
     precededby = ndb.IntegerProperty()
     time = ndb.TimeProperty()
     date = ndb.DateProperty(auto_now_add=True)
-    status = ndb.StringProperty()
+    status = ndb.IntegerProperty()
     dropzone = ndb.IntegerProperty()
 
     @classmethod
@@ -59,7 +60,7 @@ class Load(ndb.Model):
             load = Load(number=loads[last].number + 1,
                         slots=dropzone.defaultslotnumber,
                         precededby=loads[last].key.id(),
-                        status=LOAD_STATUS[WAITING],
+                        status=WAITING,
                         time=(datetime.datetime.combine(datetime.date(1, 1, 1),
                                                         loads[last].time) + time_increment).time(),
                         dropzone=dropzone_key
@@ -69,7 +70,7 @@ class Load(ndb.Model):
                 number=1,
                 slots=dropzone.defaultloadnumber,
                 precededby=-1,
-                status=LOAD_STATUS[WAITING],
+                status=WAITING,
                 time=(datetime.datetime.now() + time_increment).time(),
                 dropzone=dropzone_key
             )
@@ -108,11 +109,11 @@ class User(ndb.Model):
 class Registration(ndb.Model) :
     jumper = ndb.IntegerProperty()
     dropzone = ndb.IntegerProperty()
-    current = ndb.StringProperty()
+    current = ndb.IntegerProperty()
 
     @classmethod
     def get_by_dropzone (cls, dropzone) :
-        return cls.query(Registration.dropzone == dropzone, Registration.current == REGISTRATION_STATUS[0]).order(Registration.jumper)
+        return cls.query(Registration.dropzone == dropzone, Registration.current == CURRENT).order(Registration.jumper)
 
 
 class Sale(ndb.Model) :

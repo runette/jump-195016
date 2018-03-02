@@ -29,7 +29,7 @@
                   {{dropzone.name}}
               </div>
               <div class="col navbar-brand">
-                  {{dropzone.status}}
+                  {{dropzone_status[dropzone.status]}}
               </div>
 
           </div>
@@ -47,7 +47,7 @@
                       <div class="card-body bg-primary text-white">
                           <h5 class="card-title">Load Number {{load.number}}</h5>
                           <h5 class="card-subtitle mb-2 ">Time {{load.time.strftime("%H:%M")}} </h5>
-                          <p class="card-text"> Status : {{load.status}}</p>
+                          <p class="card-text"> Status : {{load_status[load.status]}}</p>
                           <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
                       </div>
                   </div>

@@ -40,11 +40,12 @@ class MainPage(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(dropzone_key)
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
-
+        dropzone_status = dropzone.status
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
-            'active': 0
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -58,7 +59,7 @@ class StartDay(webapp2.RequestHandler):
             #change status to open and add a default number of loads
             dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
             dropzone = Dropzone.get_by_id(dropzone_key)
-            dropzone.status = DROPZONE_OPEN
+            dropzone.status = OPEN
             Dropzone.put(dropzone)
             for i in range(dropzone.defaultloadnumber):
                 loads = Load.get_loads(dropzone_key).fetch()
@@ -70,7 +71,8 @@ class StartDay(webapp2.RequestHandler):
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
-            'active': 0
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
 
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -85,19 +87,20 @@ class EndDay(webapp2.RequestHandler):
         if user:
             dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
             dropzone = Dropzone.get_by_id(dropzone_key)
-            dropzone.status = DROPZONE_CLOSED
+            dropzone.status = CLOSED
             loads = Load.get_loads(dropzone_key).fetch()
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = []
         for load in loads:
-            if load.status == LOAD_STATUS[WAITING] or load.status == LOAD_STATUS[HOLD]:
+            if load.status in [WAITING, HOLD]:
                 DeleteLoad(load)
         Dropzone.put(dropzone)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
-            'active': 0
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -113,7 +116,8 @@ class ManageSales(webapp2.RequestHandler):
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
-            'active': 2
+            'active': 2,
+            'dropzone_status': DROPZONE_STATUS
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -136,10 +140,10 @@ class ManageLoads(webapp2.RequestHandler):
         if user.role == ADMIN or MANIFEST:
             if action == "takeoff":
                 load = Load.get_by_id(load_key)
-                load.status = LOAD_STATUS[FLYING]
+                load.status = FLYING
                 load.put()
             if action == "add":
-                if dropzone_status == DROPZONE_OPEN:
+                if dropzone_status == OPEN:
                     Load.add_load(loads, dropzone_key).put()
                 else:
                     message.update({'title': "Cannot Add"})
@@ -147,15 +151,15 @@ class ManageLoads(webapp2.RequestHandler):
                         {'body': dropzone.name + " is currently closed so new loads cannot be added "})
             if action == "landed":
                 load = Load.get_by_id(load_key)
-                load.status = LOAD_STATUS[LANDED]
+                load.status = LANDED
                 load.put()
             if action == "hold":
                 load = Load.get_by_id(load_key)
-                load.status = LOAD_STATUS[HOLD]
+                load.status = HOLD
                 load.put()
             if action == "delete":
                 load = Load.get_by_id(load_key)
-                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                if load.status in [WAITING, HOLD]:
                     DeleteLoad(load)
                 else:
                     message.update({'title': "Cannot Delete"})
@@ -177,7 +181,9 @@ class ManageLoads(webapp2.RequestHandler):
             'slot_mega': slot_mega,
             'message': message,
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
-            'active': 1
+            'active': 1,
+            'dropzone_status': DROPZONE_STATUS,
+            'load_status': LOAD_STATUS,
         }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
@@ -207,7 +213,7 @@ class ManageManifest(webapp2.RequestHandler):
         slot_size = FreeSlots(loads, slot_mega, dropzone_key)
         if user.role == ADMIN or MANIFEST:
             if action == "add":
-                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                if load.status in [WAITING, HOLD]:
                     if slot_size[load.key.id()] > 0:
                         manifest = Manifest(
                             load=load_key,
@@ -221,9 +227,10 @@ class ManageManifest(webapp2.RequestHandler):
                 else:
                     message.update({'title': "Cannot Add"})
                     message.update(
-                        {'body': "This Load is not Open for Manifest. The Load status is \" " + load.status + "\""})
+                        {'body': "This Load is not Open for Manifest. The Load status is \" " + LOAD_STATUS[
+                            load.status] + "\""})
             if action == "delete":
-                if load.status in [LOAD_STATUS[WAITING], LOAD_STATUS[HOLD]]:
+                if load.status in [WAITING, HOLD]:
                     Manifest.delete_manifest(load_key, jumper_key)
                 else:
                     message.update({'title': "Cannot Delete"})
@@ -245,7 +252,9 @@ class ManageManifest(webapp2.RequestHandler):
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
             'jumpers': JumperStructure(dropzone_key),
             'message': message,
-            'active': 1
+            'active': 1,
+            'dropzone_status': DROPZONE_STATUS,
+            'load_status': LOAD_STATUS
         }
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render(template_values))
@@ -276,7 +285,8 @@ class ManageDz(webapp2.RequestHandler):
             'users': User.get_by_dropzone(dropzone_key).fetch(),
             'message': message,
             'user_roles': USER_ROLES,
-            'active': 4
+            'active': 4,
+            'dropzone_status': DROPZONE_STATUS
 
         }
         template = JINJA_ENVIRONMENT.get_template('configuredz.html')

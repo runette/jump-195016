@@ -3,6 +3,8 @@ import datetime
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
+import os
+import jinja2
 
 #[START Global variables]
 
@@ -26,6 +28,12 @@ ADMIN = 0
 MANIFEST = 1
 SALES = 2
 VIEW = 3
+KIOSK_NUMBER_OF_COLUMNS = 4
+SLICE_SIZE = 4
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
 
 #[END Global variables]
 
@@ -171,15 +179,21 @@ def UserStatus (uri) :
 
 # Deletes a load and all associated Manifests
 def DeleteLoad(load, dropzone_key):
-    loads = Load.get_loads(dropzone_key)
+    loads = Load.get_loads(dropzone_key).fetch()
     manifests = Manifest.get_by_load(load.key.id())
     for next_load in loads:
         if next_load.precededby == load.key.id():
             next_load.precededby = load.precededby
             next_load.put()
     load.key.delete()
+    # Have to refresh loads to avoid re-inserting the deleted load
+    loads = Load.get_loads(dropzone_key).fetch()
+    # Retime all loads
+    if len(loads) != 0:
+        loads = RetimeChain(loads[0], loads, Dropzone.get_by_id(dropzone_key))
     for manifest in manifests :
-         manifest.key.delete()
+        manifest.key.delete()
+    return
 
 
 # FUNCTION that calculates the time object for a load based on the last load and the required interval - can also be used
@@ -189,6 +203,21 @@ def NextLoadTime(previous_load, time_increment):
 
 
 # Function to calculate NextLoadTime based upon DZ
-
 def NextLoadTimeDz(previous_load, dropzone):
     return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.defaultloadtime))
+
+
+# retimes a list of loads using the precededby parameter - starting with load
+def RetimeChain(load, loads, dropzone):
+    flag = True
+    while flag:
+        flag = False
+        for next_load in loads:
+            if next_load.precededby == load.key.id():
+                if next_load.status in [WAITING, HOLD]:
+                    next_load.time = NextLoadTimeDz(load, dropzone)
+                load = next_load
+                load.put()
+                flag = True
+                break
+    return loads

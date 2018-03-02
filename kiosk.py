@@ -15,22 +15,13 @@
     #
     # [START imports]
 
-import os
-import webapp2
-import jinja2
+
+    import webapp2
 from data import *
 
     # [END Imports]
 
     # [START Global variables]
-    KIOSK_NUMBER_OF_COLUMNS = 4
-    SLICE_SIZE = 4
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
-
-
 
 
 #[END Global variables]

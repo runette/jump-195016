@@ -7,17 +7,20 @@
 
     <!-- [END css] -->
 
-  </head>
-  <body>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
 
-<header class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <a class="navbar-brand" href="/">Jump Dropzone Management</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="/">Jump DZM</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
           {% if dropzone.status != -1 %}
         <ul class="navbar-nav">
+            <li class="nav-item {% if active == 0 %}active {% endif %}">
+                <a class="nav-link" href="/">Home</a>
+            </li>
             <li class="nav-item {% if active == 1 %}active {% endif %}">
                 <a class="nav-link" href="/loads?dropzone={{dropzone.key.id()}}">Loads</a>
             </li>
@@ -32,14 +35,35 @@
             </li>
         </ul>
           {% endif %}
+    </div>
+    {% set user = user_data['user'] %}{% if dropzone.status != -1 %}
 
-          <div class=" justify-content-end">
-{% set user = user_data['user'] %}
-              <a class="btn btn-primary" href="/" role="button"> {% if dropzone.status != -1 %} {{dropzone.name}}<br>
-                  {{dropzone_status[dropzone.status]}} {% endif %}</a>
-              <a class="btn btn-primary" href="{{ user_data['url']|safe }}" role="button"> {% if user %} {{user.nickname()}}<br>{% endif %}{{ user_data['url_linktext'] }}</a>
-          </div>
-      </div>
-  </header>
+    <span class="navbar-brand pr-5">
+                   {{dropzone.name}}
+                  </span>
+
+    <span class="navbar-brand {% if dropzone.status == 0 %}text-success {% else %}text-warning {% endif %} pr-5 ">
+                  {{dropzone_status[dropzone.status]}}
+                </span>
+
+    {% endif %}
+    <ul class="nav navbar-nav navbar-right">
+
+        {% if user %}
+        <li>
+            <img class="img-thumbnail" src="
+                  https://www.googleapis.com/admin/directory/v1/users/{{user.email()}}/photos/thumbnail
+                  ">
+            {% endif %}
+            <a class="btn btn-primary" href="{{ user_data['url']|safe }}" role="button"> {{ user_data['url_linktext']
+                }}</a>
+        </li>
+    </ul>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+</nav>
 
 {% include 'modal.html' %}

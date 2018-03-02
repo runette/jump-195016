@@ -15,16 +15,11 @@
 #
 # [START imports]
 
-import os
+
 import webapp2
-import jinja2
+
 import datetime
 from data import *
-
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
 
 
 # [END Imports]
@@ -34,6 +29,7 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
+
         if user:
             # Get the dropzone details based on the user
             dropzone_key = User.get_user(user.email()).fetch()[0].dropzone
@@ -354,16 +350,8 @@ class RetimeLoads(webapp2.RequestHandler):
                 load.put()
             if action == "select":
                 load.time = NextLoadTime(load, datetime.timedelta(minutes=0))
-            flag = True
-            while flag:
-                flag = False
-                for next_load in loads:
-                    if next_load.precededby == load.key.id():
-                        next_load.time = NextLoadTimeDz(load, dropzone)
-                        load = next_load
-                        load.put()
-                        flag = True
-                        break
+            loads = RetimeChain(load, loads, dropzone)
+
         else:
             message.update({'title': "Cannot Manifest"})
             message.update(

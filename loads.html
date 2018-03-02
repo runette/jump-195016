@@ -49,9 +49,35 @@
                                 </div>
                             </div>
                             {% if load.status in (0,2) %}
-                            <button type="button" class="btn btn-secondary">+5</button>
-                            <button type="button" class="btn btn-secondary">+10</button>
-                            <button type="button" class="btn btn-secondary">...</button>
+                            <a role="button" class="btn btn-secondary"
+                               href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=5">+5</a>
+                            <a role="button" class="btn btn-secondary"
+                               href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=10">+10</a>
+                            <button type="button" class="btn btn-secondary" data-html='true' data-toggle="popover"
+                                    title="Set Load Time" data-content='
+                            <form action="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=select" method="get">
+                              <div class="form-group row">
+                                <div class="col">
+                                  <div class="input-group">
+                                    <div class="input-group-addon">Hours</div>
+                                    <input id="hours" name="hours" type="text" class="form-control here" required="required" value="{{load.time.strftime("%H")}}">
+                                  </div>
+                                </div>
+                                :
+                                <div class="col">
+                                  <div class="input-group">
+                                    <input id="mins" name="mins" type="text" required="required" class="form-control here" value="{{load.time.strftime("%M")}}">
+                                    <div class="input-group-addon append">Mins</div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <div class="offset-4 col-8">
+                                  <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                              </div>
+                            </form>'>...
+                            </button>
                             {% endif %}
                         </div>
 

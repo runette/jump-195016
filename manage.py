@@ -93,8 +93,8 @@ class EndDay(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = []
         for load in loads:
-            if load.status in [WAITING, HOLD]:
-                DeleteLoad(load)
+            if load.status in [WAITING, HOLD]: load.key.delete()
+            DeleteLoad(load, dropzone_key)
         Dropzone.put(dropzone)
         template_values = {
             'user_data': user_data,
@@ -160,7 +160,7 @@ class ManageLoads(webapp2.RequestHandler):
             if action == "delete":
                 load = Load.get_by_id(load_key)
                 if load.status in [WAITING, HOLD]:
-                    DeleteLoad(load)
+                    DeleteLoad(load, dropzone_key)
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -330,6 +330,62 @@ class UpdateUser(webapp2.RequestHandler):
                 user_update.put()
         self.redirect('/configdz?dropzone=' + str(dropzone_key))
 
+
+class RetimeLoads(webapp2.RequestHandler):
+    def get(self):
+        user_data = UserStatus(self.request.uri)
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        message = {}
+        load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
+        action = self.request.get('action')
+        dropzone_key = int(self.request.get('dropzone'))
+        # Set the Dropone details
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        if user.role in [ADMIN, MANIFEST]:
+            # Set the Dropone details
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            loads = Load.get_loads(dropzone_key).fetch()
+            load = Load.get_by_id(load_key)
+            if action == "5":
+                load.time = NextLoadTime(load, datetime.timedelta(minutes=5))
+                load.put()
+            if action == "10":
+                load.time = NextLoadTime(load, datetime.timedelta(minutes=10))
+                load.put()
+            if action == "select":
+                load.time = NextLoadTime(load, datetime.timedelta(minutes=0))
+            flag = True
+            while flag:
+                flag = False
+                for next_load in loads:
+                    if next_load.precededby == load.key.id():
+                        next_load.time = NextLoadTimeDz(load, dropzone)
+                        load = next_load
+                        load.put()
+                        flag = True
+                        break
+        else:
+            message.update({'title': "Cannot Manifest"})
+            message.update(
+                {'body': "You do not have Manifest rights "})
+
+        # refresh loads
+        loads = Load.get_loads(dropzone_key).fetch()
+        slot_mega = LoadStructure(loads)
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'loads': loads,
+            'slot_mega': slot_mega,
+            'message': message,
+            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'active': 1,
+            'dropzone_status': DROPZONE_STATUS,
+            'load_status': LOAD_STATUS,
+        }
+        template = JINJA_ENVIRONMENT.get_template('loads.html')
+        self.response.write(template.render(template_values))
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/loads', ManageLoads),
@@ -342,6 +398,7 @@ app = webapp2.WSGIApplication([
     ('/jumpers', ManageJumpers),
     ('/configdz', ManageDz),
     ('/updatedz', UpdateDz),
-    ('/updateuser', UpdateUser)
+    ('/updateuser', UpdateUser),
+    ('/retime', RetimeLoads)
 
 ], debug=True)

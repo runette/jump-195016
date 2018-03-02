@@ -61,8 +61,7 @@ class Load(ndb.Model):
                         slots=dropzone.defaultslotnumber,
                         precededby=loads[last].key.id(),
                         status=WAITING,
-                        time=(datetime.datetime.combine(datetime.date(1, 1, 1),
-                                                        loads[last].time) + time_increment).time(),
+                        time=NextLoadTimeDz(loads[last], dropzone),
                         dropzone=dropzone_key
                         )
         else:
@@ -170,8 +169,26 @@ def UserStatus (uri) :
     return {'user':user, 'url':url, 'url_linktext':url_linktext}
 
 
-def DeleteLoad(load) :
+# Deletes a load and all associated Manifests
+def DeleteLoad(load, dropzone_key):
+    loads = Load.get_loads(dropzone_key)
     manifests = Manifest.get_by_load(load.key.id())
+    for next_load in loads:
+        if next_load.precededby == load.key.id():
+            next_load.precededby = load.precededby
+            next_load.put()
     load.key.delete()
     for manifest in manifests :
          manifest.key.delete()
+
+
+# FUNCTION that calculates the time object for a load based on the last load and the required interval - can also be used
+# to calculate the new time object for a load based on the current status of the load and the required time increment
+def NextLoadTime(previous_load, time_increment):
+    return (datetime.datetime.combine(datetime.date(1, 1, 1), previous_load.time) + time_increment).time()
+
+
+# Function to calculate NextLoadTime based upon DZ
+
+def NextLoadTimeDz(previous_load, dropzone):
+    return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.defaultloadtime))

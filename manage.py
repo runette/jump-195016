@@ -133,7 +133,7 @@ class ManageLoads(webapp2.RequestHandler):
         dropzone_status = dropzone.status
         # Set the Load Details
         loads = Load.get_loads(dropzone_key).fetch()
-        if user.role == ADMIN or MANIFEST:
+        if user.role in [ADMIN, MANIFEST]:
             if action == "takeoff":
                 load = Load.get_by_id(load_key)
                 load.status = FLYING
@@ -207,7 +207,7 @@ class ManageManifest(webapp2.RequestHandler):
         loads = [load]
         slot_mega = LoadStructure(loads)
         slot_size = FreeSlots(loads, slot_mega, dropzone_key)
-        if user.role == ADMIN or MANIFEST:
+        if user.role in [ADMIN, MANIFEST]:
             if action == "add":
                 if load.status in [WAITING, HOLD]:
                     if slot_size[load.key.id()] > 0:
@@ -238,7 +238,9 @@ class ManageManifest(webapp2.RequestHandler):
             message.update(
                 {'body': "You do not have Manifest rights "})
 
-
+            test = JumperStructure.get(dropzone_key)
+            for jumper in test:
+                name = jumper[0].name
 
         template_values = {
             'user_data': user_data,
@@ -257,7 +259,44 @@ class ManageManifest(webapp2.RequestHandler):
 
 
 class ManageJumpers(webapp2.RequestHandler):
-    a = 1
+    def get(self):
+        user_data = UserStatus(self.request.uri)
+        # GET PARAMETERS
+        jumper_key = int(self.request.get('jumper', DEFAULT_LOAD_ID))
+        action = self.request.get('action')
+        message = {}
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        dropzone_key = int(self.request.get('dropzone'))
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        # Set the Registration Details
+        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
+        jumpers = JumperStructure(dropzone_key)
+        if user.role in [ADMIN, SALES]:
+            if action == "add":
+                load = a
+            if action == "update":
+                load = a
+
+        else:
+            message.update({'title': "Cannot Registration"})
+            message.update(
+                {'body': "You do not have Registration rights "})
+
+        # refresh registrations
+        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
+        jumpers = JumperStructure(dropzone_key)
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'registration': registrations,
+            'jumpers': jumpers,
+            'message': message,
+            'active': 3,
+            'dropzone_status': DROPZONE_STATUS,
+            'registration_status': REGISTRATION_STATUS,
+        }
+        template = JINJA_ENVIRONMENT.get_template('jumpers.html')
+        self.response.write(template.render(template_values))
 
 
 class ManageDz(webapp2.RequestHandler):

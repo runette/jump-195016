@@ -120,7 +120,7 @@ class Registration(ndb.Model) :
 
     @classmethod
     def get_by_dropzone (cls, dropzone) :
-        return cls.query(Registration.dropzone == dropzone, Registration.current == CURRENT).order(Registration.jumper)
+        return cls.query(Registration.dropzone == dropzone, Registration.current == CURRENT)
 
 
 class Sale(ndb.Model) :
@@ -132,6 +132,9 @@ class Sale(ndb.Model) :
 
 class Jumper(ndb.Model):
     name = ndb.StringProperty()
+    email = ndb.StringProperty()
+
+
 
 
 def LoadStructure (loads) :
@@ -161,7 +164,7 @@ def JumperStructure (dropzone_key) :
     jumpers = []
     for registration in registrations :
         jumper_key = registration.jumper
-        jumpers.append(Jumper.get_by_id(jumper_key))
+        jumpers.append((Jumper.get_by_id(jumper_key), registration))
     return jumpers
 
 

@@ -238,10 +238,6 @@ class ManageManifest(webapp2.RequestHandler):
             message.update(
                 {'body': "You do not have Manifest rights "})
 
-            test = JumperStructure.get(dropzone_key)
-            for jumper in test:
-                name = jumper[0].name
-
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -262,21 +258,35 @@ class ManageJumpers(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         # GET PARAMETERS
-        jumper_key = int(self.request.get('jumper', DEFAULT_LOAD_ID))
+        jumper_key = int(self.request.get('jumper', "0"))
         action = self.request.get('action')
         message = {}
         user = User.get_user(user_data['user'].email()).fetch()[0]
         dropzone_key = int(self.request.get('dropzone'))
         dropzone = Dropzone.get_by_id(dropzone_key)
-        # Set the Registration Details
-        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        jumpers = JumperStructure(dropzone_key)
+
         if user.role in [ADMIN, SALES]:
             if action == "add":
-                load = a
+                jumper_email = self.request.get('email') + "@gmail.com"
+                jumper = Jumper.get_by_email(jumper_email).fetch()
+                if jumper:
+                    registration = Registration(
+                        jumper=jumper[0].key.id(),
+                        dropzone=dropzone_key,
+                        waiver=datetime.date.today(),
+                        reserve=datetime.date.today(),
+                        current=NOT_CURRENT
+                    )
+                    registration.put()
+                else:
+                    message.update({'title': "Invalid Jumper"})
+                    message.update(
+                        {'body': "No Jumper registered with this email"})
             if action == "update":
-                load = a
-
+                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
+                registration.waiver = datetime.datetime.strptime(self.request.get('waiver'), "%d/%m/%y")
+                registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
+                registration.put()
         else:
             message.update({'title': "Cannot Registration"})
             message.update(

@@ -12,11 +12,16 @@ handlers:
 - url: /kiosk
   script: kiosk.app
 
-- url: .*
-  script: manage.app
 
 - url: /bootstrap
   static_dir: bootstrap
+
+- url: /bootstrap-datetimepicker
+  static_dir: bootstrap-datetimepicker
+
+- url: .*
+  script: manage.app
+
 
 libraries:
 - name: webapp2

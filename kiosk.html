@@ -111,39 +111,6 @@
               slice
           }
       }).
-          {%
-              set;
-              user = user_data['user'] %
-          }
-          {%
-              if dropzone.status != -1 %}
-
-      <
-          span;
-      class
-          = "navbar-text" >
-              {;
-          {
-              dropzone.name
-          }
-      }
-      <
-          /span>
-
-          < span;
-      class
-          = "navbar-text" >
-              {;
-          {
-              dropzone_status[dropzone.status]
-          }
-      }
-      <
-          /span>;
-
-          {%
-              endif %
-          }
           hide();
           setInterval(function () {
               var show_this = kids.filter(':hidden').eq(0);

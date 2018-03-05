@@ -2,11 +2,17 @@
 <html lang="en">
   <head>
     <title>Load Management </title>
+      <style>
+          .affix {
+              top: 20px;
+              z-index: 9999 !important;
+          }
+      </style>
     {% include 'navbar.html' %}
 
       <div class="container-fluid" style="margin-top:80px">
       <div class="row flex-xl-nowrap">
-        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+          <div class="col-12 col-md-3 col-xl-2 bd-sidebar" data-spy="affix" data-offset-top="205">
             <a  class="list-group-item list-group-item-action bg-primary text-white"href="/loadaction?dropzone={{dropzone.key.id()}}&load=-1&action=add" role="button"> Add a Load</a>
         </div>
         <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" role="main">
@@ -55,7 +61,10 @@
                                href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=10">+10</a>
                             <button type="button" class="btn btn-secondary" data-html='true' data-toggle="popover"
                                     title="Set Load Time" data-content='
-                            <form action="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=select" method="get">
+                            <form action="/retime" method="get">
+                                <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                <input type="hidden" name="load" value="{{load.key.id()}}">
+                                <input type="hidden" name="action" value="select">
                               <div class="form-group row">
                                 <div class="col">
                                   <div class="input-group">

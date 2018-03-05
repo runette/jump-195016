@@ -3,14 +3,53 @@
   <head>
       <title>Manage Jumpers</title>
     {% include 'navbar.html' %}
+      <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+              integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+              crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+              integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+              crossorigin="anonymous"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+              integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+              crossorigin="anonymous"></script>
+      <script type=text/javascript src="/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
 
       <div class="container-fluid" style="margin-top:80px">
       <div class="row flex-xl-nowrap">
-        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
-            <a class="list-group-item list-group-item-action bg-primary text-white"
-               href="/jumpers?dropzone={{dropzone.key.id()}}&jumper=-1&action=add" role="button"> Register a Jumper</a>
-        </div>
-        <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" role="main">
+          <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+              <div class="list-group">
+                  <button class="list-group-item list-group-item-action active" id="new_jumper" data-toggle="popover"
+                          data-html="true" type="button" aria-controls="dz" title="Create New Jumper Registration"
+                          data-content='
+                                    <form action="/jumpers" method="get">
+                                    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                    <input type="hidden" name="action" value="add">
+                                    <div class="form-group row>
+                                              <label for="email" class="col-4 col-for-label">
+                                                 email
+                                               </label>
+                                               <div class="input-group">
+                                                <input id="email" name="email" type="text" class="form-control col-4" required="required" }}">
+                                              <span class="input-group-append col-4">
+                                                <span class="input-group-text">
+                                                    @gmail.com
+                                                </span>
+                                              </span>
+                                              </div>
+                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                            <div class="offset-4 col-8">
+                                              <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                            </div>
+                                    </div>
+                            </form>'>Register a New Jumper
+                  </button>
+              </div>
+          </div>
+
+
+          <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 bd-content" role="main">
             <div class="row">
                 <div class="col-4">
                     <div class="list-group" id="list-tab" role="tablist">
@@ -44,12 +83,15 @@
                         <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif%}"
                              id="list-{{jumper.key.id()}}" role="tabpanel"
                              aria-labelledby="list-{{jumper.key.id()}}-list">
-                            <form action=/jumpers?dropzone={{dropzone.key.id()}}&jumper={{jumper.key.id()}}&action=update">
+                            <form action="/jumpers" id="form-{{jumper.key.id()}}">
+                                <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                <input type="hidden" name="jumper" value="{{jumper.key.id()}}">
+                                <input type="hidden" name="action" value="update">
                                 <div class="form-group row">
                                     <label for="name" class="col-4 col-form-label">Jumper Name</label>
                                     <div class="col-8">
                                         <input id="name" name="name" type="text" required="required"
-                                               class="form-control here" value="{{jumper.name}}">
+                                               class="form-control here" value="{{jumper.name}}" disabled>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -57,27 +99,62 @@
                                     <div class="col-8">
                                         <div class="input-group">
                                             <input id="email" name="email" type="text" class="form-control here"
-                                                   required="required" value="{{jumper.email}}">
-                                            <div class="input-group-addon append">@gmail.com</div>
+                                                   required="required" value="{{jumper.email}}" disabled>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text primary ">
+                                                @gmail.com
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <div class="input-group date" id='datetimepicker{{jumper.key.id()}}1'
+                                     data-date-format="dd-mm-yy">
                                     <label for="waiver" class="col-4 col-form-label">Waiver Expiry</label>
                                     <div class="col-8">
-                                        <input id="waiver" name="waiver" type="text" class="form-control here"
+                                        <input id="waiver" name="waiver" type="text" class="form-control"
+                                               value="{{registration.waiver.strftime(" %d/%m/%y")}}"
                                                required="required">
+                                        <script type="text/javascript"> $(function () {
+                                            $('#datetimepicker{{jumper.key.id()}}').datetimepicker();
+                                        });</script>
+                                        <div class="input-group-append">
+
+                                            <i class="fa fa-calendar"></i>
+
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <div class="input-group date" id='datetimepicker{{jumper.key.id()}}2'
+                                     data-date-format="dd-mm-yy">
                                     <label for="reserve" class="col-4 col-form-label">Reserve Expiry</label>
                                     <div class="col-8">
-                                        <input id="reserve" name="reserve" type="text" class="form-control here">
+                                        <input id="reserve" name="reserve" type="text" class="form-control"
+                                               required="required" value="{{registration.reserve.strftime(" %d/%m/%y")}}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-4">Currency</label>
+                                    <div class="col-8">
+                                        <div class="radio">
+                                            <label><input type="radio" name="current">
+                                                <span class="p-3"> Current </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label><input type="radio" name="current">
+                                                <span class="p-3"> Not Current </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group row">
                                     <div class="offset-4 col-8">
-                                        <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                        <button name="submit" form="form-{{jumper.key.id()}}" type="submit"
+                                                class="btn btn-primary">Submit
+                                        </button>
                                     </div>
                                 </div>
                             </form>

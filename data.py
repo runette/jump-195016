@@ -116,11 +116,17 @@ class User(ndb.Model):
 class Registration(ndb.Model) :
     jumper = ndb.IntegerProperty()
     dropzone = ndb.IntegerProperty()
+    waiver = ndb.DateProperty()
+    reserve = ndb.DateProperty()
     current = ndb.IntegerProperty()
 
     @classmethod
     def get_by_dropzone (cls, dropzone) :
-        return cls.query(Registration.dropzone == dropzone, Registration.current == CURRENT)
+        return cls.query(Registration.dropzone == dropzone)
+
+    @classmethod
+    def get_by_jumper(cls, dropzone_key, jumper_key):
+        return cls.query(Registration.dropzone == dropzone_key, Registration.jumper == jumper_key)
 
 
 class Sale(ndb.Model) :
@@ -133,6 +139,10 @@ class Sale(ndb.Model) :
 class Jumper(ndb.Model):
     name = ndb.StringProperty()
     email = ndb.StringProperty()
+
+    @classmethod
+    def get_by_email(cls, email):
+        return cls.query(Jumper.email == email)
 
 
 

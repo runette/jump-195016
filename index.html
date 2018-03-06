@@ -1,38 +1,28 @@
-<!doctype html>
-<html lang="en">
-  <head>
-      <title>Jump MainPage </title>
-    {% include 'navbar.html' %}
+{% extends "manage.html" %}
+{% block title %}
+Jump MainPage
+{% endblock %}
 
-      <div class="container-fluid" style="margin-top:80px">
-      <div class="row flex-xl-nowrap">
-        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
-            <div class="list-group">
-                {% if dropzone.status != -1 %}
-                    <a  class="list-group-item list-group-item-action bg-primary text-white"href="/startday?dropzone={{dropzone.key.id()}}" role="button"> Start the Day </a>
-                    <a  class="list-group-item list-group-item-action bg-primary text-white"href="/endday?dropzone={{dropzone.key.id()}}" role="button"> End the Day </a>
-                {% endif %}
-            </div>
-        </div>
-        <main>
-           <div class="jumbotron jumbotron-fluid">
-                <div class="container">
-                    {% if dropzone.status != -1 %}
-                    <h1 class="display-4 text-centre">{{dropzone.name}} is {{dropzone_status[dropzone.status]}}</h1>
-                        <p class="lead text-justify">Use the Start of Day and End of Day buttons to open and close the dropzone for jumping.</p>
-                    {% else %}
-                        <h1 class="display-4 text-centre">No User Logged IN</h1>
-                        <p class="lead text-justify">Please use the Login Button above</p>
-                    {% endif %}
-                </div>
-            </div>
-        </main>
-      </div>
+{% block sidebar %}
+{% if dropzone.status != -1 %}
+<a class="list-group-item list-group-item-action bg-primary text-white" href="/startday?dropzone={{dropzone.key.id()}}"
+   role="button"> Start the Day </a>
+<a class="list-group-item list-group-item-action bg-primary text-white" href="/endday?dropzone={{dropzone.key.id()}}"
+   role="button"> End the Day </a>
+{% endif %}
+{% endblock %}}
+
+{% block main %}
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        {% if dropzone.status != -1 %}
+        <h1 class="display-4 text-centre">{{dropzone.name}} is {{dropzone_status[dropzone.status]}}</h1>
+        <p class="lead text-justify">Use the Start of Day and End of Day buttons to open and close the dropzone for
+            jumping.</p>
+        {% else %}
+        <h1 class="display-4 text-centre">No User Logged IN</h1>
+        <p class="lead text-justify">Please use the Login Button above</p>
+        {% endif %}
+    </div>
 </div>
-
-
-
-
-
-
-{% include 'scripts.html' %}
+{% endblock %}

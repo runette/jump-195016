@@ -1,45 +1,48 @@
-<!doctype html>
-<html lang="en">
-  <head>
-      <title>Jump Kiosk Page </title>
-      <!-- Required meta tags -->
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <meta http-equiv="refresh" content="10"/>
+{% extends "template.html" %}
+{% block title %}
+Jump Kiosk Page
+{% endblock %}
 
-      <!-- [START css] -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+{% block script %}
+<script type="text/javascript">
 
-      <!-- [END css] -->
+    $.fn.infiniteScrollUp = function () {
+        var self = this, kids = self.children();
+        kids.slice({;
+        {
+            slice
+        }
+    }).
+        hide();
+        setInterval(function () {
+            var show_this = kids.filter(':hidden').eq(0);
+            show_this.show();
+            kids.eq(0).hide();
+            kids.eq(0).appendTo(self);
+            kids = self.children()
+        }, 3000);
+        return this
+    };
+    {%
+        for i in range(load_len) %}
+    $(function () {
+        $('#scroll{{i}}').infiniteScrollUp()
+    });
+    {%
+        endfor %
+    }
+</script>
+{% endblock %}
 
-  </head>
-  <body>
+{% block navbar_right %}
+{% endblock %}
 
-  <header class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <a class="navbar-brand" href="/">Jump Dropzone Management</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
+{% block sidebar_exist %}
+{% endblock %}
 
-          <div class="row">
-              <div class="col navbar-brand">
-                  {{dropzone.name}}
-              </div>
-              <div class="col navbar-brand">
-                  {{dropzone_status[dropzone.status]}}
-              </div>
-
-          </div>
-      </div>
-  </header>
-
-  <main>
-      <div class="container-fluid">
-          <div class="row ">
-              {% for i in range(load_len) %}
+{% block main %}
+<div class="row">
+    {% for i in range(load_len) %}
               <div class="col-3">
                   {% set load = next_loads[i] %}
                   {% set slots = slot_mega[load.key.id()] %}
@@ -86,50 +89,6 @@
                       </table>
                   </div>
               </div>
-              {% endfor %}
-      </div>
-      </div>
-  </main>
-
-  <!-- Optional JavaScript -->
-  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-          integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-          crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-          integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-          crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-          integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-          crossorigin="anonymous"></script>
-  <script type="text/javascript">
-
-      $.fn.infiniteScrollUp = function () {
-          var self = this, kids = self.children();
-          kids.slice({;
-          {
-              slice
-          }
-      }).
-          hide();
-          setInterval(function () {
-              var show_this = kids.filter(':hidden').eq(0);
-              show_this.show();
-              kids.eq(0).hide();
-              kids.eq(0).appendTo(self);
-              kids = self.children()
-          }, 3000);
-          return this
-      };
-      {%
-          for i in range(load_len) %}
-      $(function () {
-          $('#scroll{{i}}').infiniteScrollUp()
-      });
-      {%
-          endfor %
-      }
-
-  </script>
-  </body>
-</html>
+    {% endfor %}
+</div>
+{% endblock %}

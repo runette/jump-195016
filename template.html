@@ -1,19 +1,81 @@
 <!doctype html>
 <html lang="en">
   <head>
-      <title>TODO : PAGETITLE </title>
-    {% include 'navbar.html' %}
+      <title>{% block title %}JUMP DZM {% endblock %}</title>
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+      <!-- [START css] -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
+      {% block css %}{% endblock %}
+      <!-- [END css] -->
+      {% include 'scripts.html' %}
+      {% block script %} {% endblock %}
+
+  </head>
+  <body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+
+      <div class="navbar-header">
+          {% block brand %}
+          <a class="navbar-brand" href="/">Jump DZM</a>
+          {% endblock %}
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+          {% block navbar_left %}{% endblock %}
+      </div>
+      {% block navbar_centre %}
+      {% if dropzone.status != -1 %}
+      <span class="navbar-brand pr-5">
+            {{dropzone.name}}
+        </span>
+      <span class="navbar-brand {% if dropzone.status == 0 %}text-success {% else %}text-warning {% endif %} pr-5 ">
+            {{dropzone_status[dropzone.status]}}
+        </span>
+      {% endif %}
+      {% endblock %}
+      </div>
+      {% block navbar_right %}
+      {% set user = user_data['user'] %}
+      <ul class="nav navbar-nav navbar-right">
+          <li>
+              {% if user %}
+              <img class="img-thumbnail" src="
+                  https://www.googleapis.com/admin/directory/v1/users/{{user.email()}}/photos/thumbnail
+                  ">
+              {% endif %}
+              <a class="btn btn-primary" href="{{ user_data['url']|safe }}" role="button"> {{
+                  user_data['url_linktext']}}</a>
+          </li>
+      </ul>
+      {% endblock %}
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+  </nav>
+  {% if message %}
+  {% include 'modal.html' %}
+  {% endif %}
 
       <div class="container-fluid" style="margin-top:80px">
-      <div class="row flex-xl-nowrap">
-        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
-            <div class="list-group">
-            </div>
-        </div>
-        <main>
-
-        </main>
+          <div class="row flex-xl-nowrap">
+              {% block sidebar_exist %}
+              <div class="col-12 col-md-3 col-xl-2 bd-sidebar" data-spy="affix" data-offset-top="205">
+                  <div class="list-group">
+                      {% block sidebar %}{% endblock %}
+                  </div>
+              </div>
+              {% endblock %}
+              <main class="col-12 m-0">
+                  {% block main %}{% endblock %}
+              </main>
+          </div>
       </div>
-</div>
-
-{% include 'scripts.html' %}
+  </body>
+</html>

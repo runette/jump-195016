@@ -20,10 +20,12 @@ FLYING = 1
 HOLD = 2
 LANDED = 3
 DEFAULT_LOAD_ID = 0
-REGISTRATION_STATUS = ["Current", "Not Current"]
+REGISTRATION_STATUS = ["Yes", "No"]
 CURRENT = 0
 NOT_CURRENT = 1
 USER_ROLES = ["Admin", "Manifest", "Sales", "View Only"]  # - admin, manifest, sales, view
+ROLE_COLOURS = [("bg-primary", "text-white"), ("bg-success", "text-white"), ("bg-info", "text-white"),
+                ("bg-secondary", "text-white")]
 ADMIN = 0
 MANIFEST = 1
 SALES = 2
@@ -132,8 +134,23 @@ class Registration(ndb.Model) :
 class Sale(ndb.Model) :
     jumper = ndb.IntegerProperty()
     dropzone = ndb.IntegerProperty()
-    name = ndb.StringProperty()
     jumps_remaining = ndb.IntegerProperty()
+    package = ndb.IntegerProperty()
+
+    @classmethod
+    def getSales(cls, dropzone_key, jumper_key):
+        return cls.query(Sale.jumper == jumper_key, Sale.dropzone == dropzone_key).order(Sale.package)
+
+
+class SalesPackage(ndb.Model):
+    name = ndb.StringProperty()
+    dropzone = ndb.IntegerProperty()
+    description = ndb.StringProperty()
+    size = ndb.IntegerProperty()
+
+    @classmethod
+    def get_by_dropzone(cls, dropzone_key):
+        return cls.query(SalesPackage.dropzone == dropzone_key).order(SalesPackage.name)
 
 
 class Jumper(ndb.Model):
@@ -143,9 +160,6 @@ class Jumper(ndb.Model):
     @classmethod
     def get_by_email(cls, email):
         return cls.query(Jumper.email == email)
-
-
-
 
 def LoadStructure (loads) :
     manifests = Manifest.query().fetch()

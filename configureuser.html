@@ -1,0 +1,110 @@
+{% extends "twolist.html" %}
+{% block title %}
+Manage DZ Configurations
+{% endblock %}
+
+{% block sidebar %}
+<button class="list-group-item list-group-item-action active" id="new_user" data-toggle="popover"
+        data-html="true" type="button" aria-controls="dz" title="Register a New User"
+        data-content='
+                                    <form action="/updateuser" method="post">
+                                    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                    <input type="hidden" name="action" value="add">
+                                    <div class="form-group>
+                                              <label for="email" class="col-4 col-for-label">
+                                                 email
+                                               </label>
+                                               <div class="input-group">
+                                                <input id="email" name="user_email" type="text" class="form-control col-4" required="required" }}">
+                                              <span class="input-group-append col-6">
+                                                <span class="input-group-text">
+                                                    @gmail.com
+                                                </span>
+                                              </span>
+                                              </div>
+                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                            <div class="offset-4 col-8">
+                                              <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                            </div>
+                                    </div>
+                            </form>'>
+    Add User
+</button>
+
+{% endblock %}
+
+{% block heading %}
+<h1>User Configuration</h1>
+{% endblock %}
+
+{% block list_group %}
+{% for user in users %}
+<a class="list-group-item list-group-item-action {% if loop.index == 1 %} active {% endif%} "
+   id="list-{{user.key.id()}}-list" data-toggle="list" href="#list-{{user.key.id()}}"
+   role="tab" aria-controls="{{user.key.id()}}">
+    <div class="row justify-content-between">
+        <div class="col justify-content-left">
+            <h6 class="card-title">
+                {{user.name}}
+            </h6>
+        </div>
+        <div class="col justify-content-right">
+            <h6 class="card-title {{role_colours[user.role][0]}} {{role_colours[user.role][1]}} p-1">
+                {{user_roles[user.role]}}
+            </h6>
+        </div>
+    </div>
+</a>
+{% endfor %}
+{% endblock %}
+
+{%  block tab_content %}
+{% for user in users %}
+<div class='tab-pane fade {% if loop.index == 1 %} show active {% endif %}' id="list-{{user.key.id()}}" role="tabpanel"
+     aria-labelledby='list-{{user.key.id()}}-list'>
+    <form action="/updateuser" method="post">
+        <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+        <input type="hidden" name="user" value="{{user.key.id()}}">
+        <input type="hidden" name="action" value="update">
+        <div class="form-group row">
+            <label for="user_email" class="col-4 col-form-label">User Email</label>
+            <div class="col-8">
+                <div class="input-group">
+                    <input id="user_email" name="user_email" type="text" class="form-control here"
+                           value='{{user.name|replace("@gmail.com","")}}'>
+                    <div class="input-group-append">
+                                <span class="input-group-text">
+                                    @gmail.com
+                                </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="user_role" class="col-4 col-form-label">Role</label>
+            <div class="col-8">
+                <select id="user_role" name="user_role" class="custom-select" value="{{user_roles[user.role]}}">
+                    <option selected value="{{user.role}}">
+                                <span class=" {{role_colours[user.role][0]}} {{role_colours[user.role][1]}} p-1">
+                                    {{user_roles[user.role]}}
+                                </span>
+                    </option>
+                    {% for role in user_roles %}
+                    <option value="{{loop.index}}">
+                        {{role}}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="offset-4 col-8">
+                <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endfor %}
+{% endblock %}

@@ -16,7 +16,25 @@
                 <a class="nav-link" href="/jumpers?dropzone={{dropzone.key.id()}}">Jumpers</a>
             </li>
             <li class="nav-item {% if active == 4 %}active {% endif %}">
-                <a class="nav-link" href="/configdz?dropzone={{dropzone.key.id()}}">Configure</a>
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle" role="button" id="ConfigMenuButton" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Configure
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="ConfigMenuButton">
+                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=dz">Dropzone
+                            Config</a>
+                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=user">User
+                            Config</a>
+                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=sales">Sales
+                            Config</a>
+                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=kiosk">Kiosk
+                            Config</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item {% if active == 3 %}active {% endif %}">
+                <a class="nav-link" href="/help">Help</a>
             </li>
         </ul>
 {% endblock %}}

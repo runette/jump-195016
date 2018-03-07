@@ -19,3 +19,8 @@ indexes:
   properties:
   - name: dropzone
   - name: name
+
+- kind: SalesPackage
+  properties:
+  - name: dropzone
+  - name: name

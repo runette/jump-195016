@@ -5,8 +5,8 @@ Manage Jumpers
 
 {% block sidebar%}
 <button class="list-group-item list-group-item-action active" id="new_jumper" data-toggle="popover"
-                          data-html="true" type="button" aria-controls="dz" title="Create New Jumper Registration"
-                          data-content='
+        data-html="true" type="button" aria-controls="dz" title="Register a New Jumper"
+        data-content='
                                     <form action="/jumpers" method="get">
                                     <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
                                     <input type="hidden" name="action" value="add">
@@ -30,7 +30,7 @@ Manage Jumpers
                                             </div>
                                     </div>
                             </form>'>
-    Register a New Jumper
+    New Jumper
 </button>
 {% endblock %}
 
@@ -59,9 +59,9 @@ Manage Jumpers
 {% for jumper_mega in jumpers %}
 {% set jumper = jumper_mega[0] %}
 {% set registration = jumper_mega[1] %}
-<div class="tab-pane fade {% if loop.index == 1 %} show active {% endif%}"
-                             id="list-{{jumper.key.id()}}" role="tabpanel"
-                             aria-labelledby="list-{{jumper.key.id()}}-list">
+<div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %}"
+     id="list-{{jumper.key.id()}}" role="tabpanel"
+     aria-labelledby="list-{{jumper.key.id()}}-list">
     <form action="/jumpers" id="form-{{jumper.key.id()}}">
         <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
         <input type="hidden" name="jumper" value="{{jumper.key.id()}}">
@@ -92,8 +92,8 @@ Manage Jumpers
             <label for="waiver" class="col-4 col-form-label">Waiver Expiry</label>
             <div class="col-8">
                 <input id="waiver" name="waiver" type="text" class="form-control"
-                       value="{{registration.waiver.strftime(" %d/%m/%y")}}"
-                                               required="required">
+                       value='{{registration.waiver.strftime("%d/%m/%y")}}'
+                       required="required">
                 <script type="text/javascript"> $(function () {
                                             $('#datetimepicker{{jumper.key.id()}}').datetimepicker();
                                         });</script>
@@ -108,7 +108,7 @@ Manage Jumpers
             <label for="reserve" class="col-4 col-form-label">Reserve Expiry</label>
             <div class="col-8">
                 <input id="reserve" name="reserve" type="text" class="form-control"
-                       required="required" value="{{registration.reserve.strftime(" %d/%m/%y")}}">
+                       required="required" value='{{registration.reserve.strftime("%d/%m/%y")}}'>
             </div>
         </div>
         <div class="form-group row">

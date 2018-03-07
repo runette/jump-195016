@@ -13,8 +13,7 @@
       <link rel="stylesheet" href="/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
       {% block css %}{% endblock %}
       <!-- [END css] -->
-      {% include 'scripts.html' %}
-      {% block script %} {% endblock %}
+
 
   </head>
   <body>
@@ -34,7 +33,7 @@
       <span class="navbar-brand pr-5">
             {{dropzone.name}}
         </span>
-      <span class="navbar-brand {% if dropzone.status == 0 %}text-success {% else %}text-warning {% endif %} pr-5 ">
+      <span class="navbar-brand {% if dropzone.status == 0 %}text-success font-weight-bold {% else %}text-warning {% endif %} pr-5 ">
             {{dropzone_status[dropzone.status]}}
         </span>
       {% endif %}
@@ -78,4 +77,5 @@
           </div>
       </div>
   </body>
+  {% include 'scripts.html' %} {% block script %} {% endblock %}
 </html>

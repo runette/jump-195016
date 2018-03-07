@@ -1,0 +1,86 @@
+{% extends "twolist.html" %}
+{% block title %}
+Manage DZ Configurations
+{% endblock %}
+
+{% block sidebar %}
+<button class="list-group-item list-group-item-action active" id="new_sales" data-toggle="popover"
+        data-html="true" type="button" aria-controls="sales" title="Create a new Package"
+        data-content='
+                                    <form action="/updatesales" method="post">
+                                    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                    <input type="hidden" name="action" value="add">
+                                    <div class="form-group row>
+                                              <label for="name" class="col-4 col-for-label">
+                                                 Package Name
+                                               </label>
+                                               <div class="input-group">
+                                                <input id="name" name="sales_name" type="text" class="form-control col-6" required="required" }}">
+                                              </div>
+                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                            <div class="offset-4 col-8">
+                                              <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                                            </div>
+                                    </div>
+                            </form>'>
+    Add Package
+</button>
+{% endblock %}
+
+{% block heading %}
+<h1>Sales Package Configuration</h1>
+{% endblock %}
+
+{% block list_group %}
+{% for package in packages %}
+<a class="list-group-item list-group-item-action {% if loop.index == 1 %} active {% endif%} "
+   id="list-{{package.key.id()}}-list" data-toggle="list" href="#list-{{package.key.id()}}"
+   role="tab" aria-controls="{{package.key.id()}}">
+    <div class="row justify-content-between">
+        <div class="col justify-content-left">
+            <h6 class="card-title">
+                {{package.name}}
+            </h6>
+        </div>
+    </div>
+</a>
+{% endfor %}
+{% endblock %}
+
+{% block tab_content %}
+{% for package in packages %}
+<div class='tab-pane fade {% if loop.index == 1 %} show active {% endif %}' id="list-{{package.key.id()}}"
+     role="tabpanel"
+     aria-labelledby="list-{{package.key.id()}}-list">
+    <form action="/updatesales" method="post">
+        <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+        <input type="hidden" name="package" value="{{package.key.id()}}">
+        <input type="hidden" name="action" value="update">
+        <div class="form-group row">
+            <label for="sales_name" class="col-4 col-form-label">Sales Package</label>
+            <div class="col-8">
+                <div class="input-group">
+                    <input id="sales_name" name="sales_name" type="text"
+                           class="form-control here" value="{{package.name}}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="sales_size" class="col-4 col-form-label">
+                Number of Jumps
+            </label>
+            <div class="col-8">
+                <input id="sales_size" name="sales_size" type="text" class="form-control here" value="{{package.size}}">
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="offset-4 col-8">
+                <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endfor %}
+{% endblock %}

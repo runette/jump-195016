@@ -323,6 +323,16 @@ class ManageDz(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(dropzone_key)
             message.update({'title': "Not Administrator"})
             message.update({'body': "You do not have administrator rights"})
+        action = self.request.get('action')
+        if action == "user":
+            response = "configureuser.html"
+        elif action == "sales":
+            response = "configuresales.html"
+        elif action == "kiosk":
+            response = "configurekiosk.html"
+        else:
+            response = "configuredz.html"
+
 
         template_values = {
             'user_data': user_data,
@@ -330,11 +340,13 @@ class ManageDz(webapp2.RequestHandler):
             'users': User.get_by_dropzone(dropzone_key).fetch(),
             'message': message,
             'user_roles': USER_ROLES,
+            'role_colours': ROLE_COLOURS,
             'active': 4,
-            'dropzone_status': DROPZONE_STATUS
+            'dropzone_status': DROPZONE_STATUS,
+            'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch()
 
         }
-        template = JINJA_ENVIRONMENT.get_template('configuredz.html')
+        template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))
 
 
@@ -351,7 +363,7 @@ class UpdateDz(webapp2.RequestHandler):
             dropzone.defaultloadnumber = int(self.request.get('default_load_number'))
             dropzone.defaultloadtime = int(self.request.get('default_load_time'))
             dropzone.put()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key))
+        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=dz')
 
 
 class UpdateUser(webapp2.RequestHandler):
@@ -359,21 +371,51 @@ class UpdateUser(webapp2.RequestHandler):
         user_data = UserStatus(self.request.uri)
         user = User.get_user(user_data['user'].email()).fetch()[0]
         dropzone_key = int(self.request.get('dropzone'))
+        action = self.request.get('action')
+
         if user.role == ADMIN:
-            # GET PARAMETERS
-            user_update = User.get_user(self.request.get('user_email') + "@gmail.com").fetch()
-            if user_update:
-                user_update[0].role = int(self.request.get('user_role')) - 1
-                user_update[0].dropzone = dropzone_key
-                user_update[0].put()
-            else:
+            if action == "update":
+                # GET PARAMETERS
+                user_key = int(self.request.get('user', '-1'))
+                user_update = User.get_by_id(user_key)
+                if user_update:
+                    user_update.role = int(self.request.get('user_role')) - 1
+                    user_update.dropzone = dropzone_key
+                    user_update.put()
+            if action == "add":
                 user_update = User(
                     name=self.request.get('user_email') + "@gmail.com",
                     dropzone=dropzone_key,
-                    role=int(self.request.get('user_role')) - 1
+                    role=VIEW
                 )
                 user_update.put()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key))
+        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=user')
+
+
+class UpdateSales(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = User.get_user(user_data['user'].email()).fetch()[0]
+        dropzone_key = int(self.request.get('dropzone'))
+        action = self.request.get('action')
+        if user.role == ADMIN:
+            if action == "update":
+                # GET PARAMETERS
+                package_key = int(self.request.get('package', '-1'))
+                package = SalesPackage.get_by_id(package_key)
+                if package:
+                    package.size = int(self.request.get('sales_size'))
+                    package.name = self.request.get('sales_name')
+                    package.put()
+            if action == "add":
+                user_update = SalesPackage(
+                    name=self.request.get('sales_name'),
+                    dropzone=dropzone_key,
+                    size=0
+                )
+                user_update.put()
+        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=sales')
+
 
 
 class RetimeLoads(webapp2.RequestHandler):
@@ -436,6 +478,7 @@ app = webapp2.WSGIApplication([
     ('/configdz', ManageDz),
     ('/updatedz', UpdateDz),
     ('/updateuser', UpdateUser),
-    ('/retime', RetimeLoads)
+    ('/retime', RetimeLoads),
+    ('/updatesales', UpdateSales)
 
 ], debug=True)

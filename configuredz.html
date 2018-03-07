@@ -4,142 +4,85 @@ Manage DZ Configurations
 {% endblock %}
 
 {% block sidebar %}
-<a class="list-group-item list-group-item-action active" id="list-dz-list" data-toggle="list"
-                       href="#list-dz" role="tab" aria-controls="dz">Dropzone Configuration</a>
-<a class="list-group-item list-group-item-action" id="list-users-list" data-toggle="list"
-   href="#list-users" role="tab" aria-controls="users">User Configuration</a>
-<a class="list-group-item list-group-item-action" id="list-kiosk-list" data-toggle="list"
-   href="#list-kiosk" role="tab" aria-controls="kiosk">Kiosk Configuration</a>
+
 {% endblock %}
 
 {% block main %}
-                <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="list-dz" role="tabpanel" aria-labelledby="list-dz-list">
+<div class="row">
+    <div class="col-12">
                         <h1>Dropzone Configuration</h1>
-                <form action="/updatedz?dropzone={{dropzone.key.id()}}" method="post">
-                    <div class="form-group row">
-                        <label for="dropzone_name" class="col-4 col-form-label">Dropzone Name</label>
-                        <div class="col-8">
-                            <input id="dropzone_name" name="dropzone_name" type="text"
-                                   aria-describedby="dropzone_nameHelpBlock" required="required"
-                                   class="form-control here" value="{{dropzone.name}}">
-                            <span id="dropzone_nameHelpBlock" class="form-text text-muted">Enter the Dropzone Name to appear on the Nav Bar</span>
+        <form action="/updatedz?dropzone={{dropzone.key.id()}}" method="post">
+            <div class="form-group row">
+                <label for="dropzone_name" class="col-4 col-form-label">
+                    Dropzone Name
+                </label>
+                <div class="col-8">
+                    <input id="dropzone_name" name="dropzone_name" type="text"
+                           aria-describedby="dropzone_nameHelpBlock" required="required"
+                           class="form-control here" value="{{dropzone.name}}">
+                    <span id="dropzone_nameHelpBlock" class="form-text text-muted">Enter the Dropzone Name to appear on the Nav Bar</span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="default_slot_number" class="col-4 col-form-label">Default Slot Number per
+                    load
+                </label>
+                <div class="col-8">
+                    <div class="input-group">
+                        <input id="default_slot_number" name="default_slot_number"
+                               value="{{dropzone.defaultslotnumber}}" type="text" required="required"
+                               class="form-control here">
+                        <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            slots per load
+                                        </span>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="default_slot_number" class="col-4 col-form-label">Default Slot Number per
-                            load</label>
-                        <div class="col-8">
-                            <div class="input-group">
-                                <input id="default_slot_number" name="default_slot_number"
-                                       value="{{dropzone.defaultslotnumber}}" type="text" required="required"
-                                       class="form-control here">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                        slots per load
-                                    </span>
-                                </div>
-                            </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="default_load_number" class="col-4 col-form-label">Autocreate Loads</label>
+                <div class="col-8">
+                    <div class="input-group">
+                        <input id="default_load_number" name="default_load_number"
+                               value="{{dropzone.defaultloadnumber}}" type="text"
+                               aria-describedby="default_load_numberHelpBlock" class="form-control here">
+                        <div class="input-group-append">
+                                            <span class="input-group-text">
+                                              Loads
+                                            </span>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="default_load_number" class="col-4 col-form-label">Autocreate Loads</label>
-                        <div class="col-8">
-                            <div class="input-group">
-                                <input id="default_load_number" name="default_load_number"
-                                       value="{{dropzone.defaultloadnumber}}" type="text"
-                                       aria-describedby="default_load_numberHelpBlock" class="form-control here">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                        Loads
-                                    </span>
-                                </div>
-                            </div>
-                            <span id="default_load_numberHelpBlock" class="form-text text-muted">Number of loads to auto create at the start of the day.</span>
+                    <span id="default_load_numberHelpBlock" class="form-text text-muted">Number of loads to auto create at the start of the day.</span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="default_load_time" class="col-4 col-form-label">
+                    Load Cycletime
+                </label>
+                <div class="col-8">
+                    <div class="input-group">
+                        <input id="default_load_time" name="default_load_time"
+                               value="{{dropzone.defaultloadtime}}" type="text"
+                               aria-describedby="default_load_timeHelpBlock" class="form-control here">
+                        <div class="input-group-append">
+                                            <span class="input-group-text">
+                                                minutes
+                                            </span>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="default_load_time" class="col-4 col-form-label">Load Cycletime</label>
-                        <div class="col-8">
-                            <div class="input-group">
-                                <input id="default_load_time" name="default_load_time"
-                                       value="{{dropzone.defaultloadtime}}" type="text"
-                                       aria-describedby="default_load_timeHelpBlock" class="form-control here">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                    minutes
-                                    </span>
-                                </div>
-                            </div>
-                            <span id="default_load_timeHelpBlock" class="form-text text-muted">Time interval between loads</span>
-                        </div>
+                    <span id="default_load_timeHelpBlock"
+                          class="form-text text-muted">Time interval between loads</span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="offset-4 col-8">
+                    <button name="submit" type="submit" class="btn btn-primary">
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </form>
                     </div>
-                    <div class="form-group row">
-                        <div class="offset-4 col-8">
-                            <button name="submit" type="submit" class="btn btn-primary">Submit</button>
-                        </div>
-                    </div>
-                </form>
-                    </div>
-                    <div class="tab-pane fade" id="list-users" role="tabpanel" aria-labelledby="list-users-list">
-                        <h1>User Configuration</h1>
-                        <div class="row">
-                            <div class="col">
-                                <form action="/updateuser?dropzone={{dropzone.key.id()}}" method="post">
-                                    <div class="form-group row">
-                                        <label for="user_email" class="col-4 col-form-label">User Email</label>
-                                        <div class="col-8">
-                                            <div class="input-group">
-                                                <input id="user_email" name="user_email" type="text"
-                                                       class="form-control here">
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">
-                                                        @gmail.com
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="user_role" class="col-4 col-form-label">Role</label>
-                                        <div class="col-8">
-                                            <select id="user_role" name="user_role" class="custom-select">
-                                                {% for role in user_roles %}
-                                                <option value="{{loop.index}}">{{role}}</option>
-                                                {% endfor %}}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <div class="offset-4 col-8">
-                                            <button name="submit" type="submit" class="btn btn-primary">Submit</button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="col">
-                                <ul class="list-group">
-                                    {% for user in users %}
-                                    <li class="list-group-item">
-                                        <div class="row">
-                                            <div class="col">
-                                                {{user.name}}
-                                            </div>
-                                            <div class="col">
-                                                {{user_roles[user.role]}}
-                                            </div>
-                                        </div>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="list-kiosk" role="tabpanel" aria-labelledby="list-kiosk-list">
-                        <h1>Kiosk Configuration</h1>
-                        TEST
-                    </div>
-
                 </div>
 {% endblock %}

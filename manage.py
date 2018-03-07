@@ -286,7 +286,12 @@ class ManageJumpers(webapp2.RequestHandler):
                 registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
                 registration.waiver = datetime.datetime.strptime(self.request.get('waiver'), "%d/%m/%y")
                 registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
+                registration.current = int(self.request.get('current', "1"))
                 registration.put()
+            if action == "delete":
+                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
+                if registration:
+                    registration.key.delete()
         else:
             message.update({'title': "Cannot Registration"})
             message.update(
@@ -304,6 +309,7 @@ class ManageJumpers(webapp2.RequestHandler):
             'active': 3,
             'dropzone_status': DROPZONE_STATUS,
             'registration_status': REGISTRATION_STATUS,
+            'registration_colours': REGISTRATION_COLOURS
         }
         template = JINJA_ENVIRONMENT.get_template('jumpers.html')
         self.response.write(template.render(template_values))
@@ -362,6 +368,7 @@ class UpdateDz(webapp2.RequestHandler):
             dropzone.defaultslotnumber = int(self.request.get('default_slot_number'))
             dropzone.defaultloadnumber = int(self.request.get('default_load_number'))
             dropzone.defaultloadtime = int(self.request.get('default_load_time'))
+            dropzone.tag = self.request.get('dropzone_tag')
             dropzone.put()
         self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=dz')
 
@@ -372,14 +379,13 @@ class UpdateUser(webapp2.RequestHandler):
         user = User.get_user(user_data['user'].email()).fetch()[0]
         dropzone_key = int(self.request.get('dropzone'))
         action = self.request.get('action')
-
+        user_key = int(self.request.get('user', '-1'))
         if user.role == ADMIN:
             if action == "update":
                 # GET PARAMETERS
-                user_key = int(self.request.get('user', '-1'))
                 user_update = User.get_by_id(user_key)
                 if user_update:
-                    user_update.role = int(self.request.get('user_role')) - 1
+                    user_update.role = int(self.request.get('user_role'))
                     user_update.dropzone = dropzone_key
                     user_update.put()
             if action == "add":
@@ -389,6 +395,10 @@ class UpdateUser(webapp2.RequestHandler):
                     role=VIEW
                 )
                 user_update.put()
+            if action == "delete":
+                user_update = User.get_by_id(user_key)
+                if user_update:
+                    user_update.key.delete()
         self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=user')
 
 
@@ -398,22 +408,26 @@ class UpdateSales(webapp2.RequestHandler):
         user = User.get_user(user_data['user'].email()).fetch()[0]
         dropzone_key = int(self.request.get('dropzone'))
         action = self.request.get('action')
+        package_key = int(self.request.get('package', '-1'))
         if user.role == ADMIN:
             if action == "update":
                 # GET PARAMETERS
-                package_key = int(self.request.get('package', '-1'))
                 package = SalesPackage.get_by_id(package_key)
                 if package:
                     package.size = int(self.request.get('sales_size'))
                     package.name = self.request.get('sales_name')
                     package.put()
             if action == "add":
-                user_update = SalesPackage(
+                package = SalesPackage(
                     name=self.request.get('sales_name'),
                     dropzone=dropzone_key,
                     size=0
                 )
-                user_update.put()
+                package.put()
+            if action == "delete":
+                package = SalesPackage.get_by_id(package_key)
+                if package:
+                    package.key.delete()
         self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=sales')
 
 

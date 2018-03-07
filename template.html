@@ -31,7 +31,7 @@
       {% block navbar_centre %}
       {% if dropzone.status != -1 %}
       <span class="navbar-brand pr-5">
-            {{dropzone.name}}
+            {{dropzone.name}} - {{dropzone.tag}}
         </span>
       <span class="navbar-brand {% if dropzone.status == 0 %}text-success font-weight-bold {% else %}text-warning {% endif %} pr-5 ">
             {{dropzone_status[dropzone.status]}}

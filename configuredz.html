@@ -18,9 +18,17 @@ Manage DZ Configurations
                 </label>
                 <div class="col-8">
                     <input id="dropzone_name" name="dropzone_name" type="text"
-                           aria-describedby="dropzone_nameHelpBlock" required="required"
+                           required="required"
                            class="form-control here" value="{{dropzone.name}}">
-                    <span id="dropzone_nameHelpBlock" class="form-text text-muted">Enter the Dropzone Name to appear on the Nav Bar</span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="dropzone_tag" class="col-4 col-form-label">
+                    Dropzone Tag Line
+                </label>
+                <div class="col-8">
+                    <input id="dropzone_tag" name="dropzone_tag" type="text" class="form-control here"
+                           value="{{dropzone.tag}}">
                 </div>
             </div>
             <div class="form-group row">

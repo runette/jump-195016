@@ -21,6 +21,7 @@ HOLD = 2
 LANDED = 3
 DEFAULT_LOAD_ID = 0
 REGISTRATION_STATUS = ["Yes", "No"]
+REGISTRATION_COLOURS = [("bg-primary", "text-white"), ("bg-danger", "text-white")]
 CURRENT = 0
 NOT_CURRENT = 1
 USER_ROLES = ["Admin", "Manifest", "Sales", "View Only"]  # - admin, manifest, sales, view
@@ -46,6 +47,7 @@ class Dropzone(ndb.Model):
     defaultloadnumber = ndb.IntegerProperty()
     defaultslotnumber = ndb.IntegerProperty()
     status = ndb.IntegerProperty()
+    tag = ndb.StringProperty()
 
 
 class Load(ndb.Model):

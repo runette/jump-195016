@@ -9,14 +9,8 @@ Jump Kiosk Page
 
     $.fn.infiniteScrollUp = function () {
         var self = this, kids = self.children();
-        if (kids.length > {{
-            slice
-        }
-    })
-        {
-            kids.slice({slice}
-        }
-    ).hide();
+        if (kids.length > {{slice}})
+        {kids.slice({slice}}).hide();
             setInterval(function () {
                 var show_this = kids.filter(':hidden').eq(0);
                 show_this.show();
@@ -27,14 +21,11 @@ Jump Kiosk Page
     }
     return this;
     }
-    {%
-        for i in range(load_len) %}
+    {% for i in range(load_len) %}
     $(function () {
         $('#scroll{{i}}').infiniteScrollUp()
     });
-    {%
-        endfor %
-    }
+    {% endfor % }
 </script>
 {% endblock %}
 

@@ -6,6 +6,7 @@
             <li class="nav-item {% if active == 0 %}active {% endif %}">
                 <a class="nav-link" href="/">Home</a>
             </li>
+            {% if dropzone.status != -1 %}
             <li class="nav-item {% if active == 1 %}active {% endif %}">
                 <a class="nav-link" href="/loads?dropzone={{dropzone.key.id()}}">Loads</a>
             </li>
@@ -33,6 +34,7 @@
                     </div>
                 </div>
             </li>
+            {% endif %}
             <li class="nav-item {% if active == 3 %}active {% endif %}">
                 <a class="nav-link" href="/help">Help</a>
             </li>

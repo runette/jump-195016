@@ -51,24 +51,30 @@ class StartDay(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
-        if user:
+        message = {}
+        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        if dropzone.status == CLOSED:
             #change status to open and add a default number of loads
-            dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
-            dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.status = OPEN
             Dropzone.put(dropzone)
             for i in range(dropzone.defaultloadnumber):
                 loads = Load.get_loads(dropzone_key).fetch()
                 Load.add_load(loads, dropzone_key).put()
 
+        elif dropzone.status == OPEN:
+            message.update({'title': "Already Open"})
+            message.update(({'body': "The dropzone is already open"}))
         else:
-            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
+            message.update({'title': "Problem"})
+            message.update(({'body': "Something went wrong"}))
 
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'active': 0,
-            'dropzone_status': DROPZONE_STATUS
+            'dropzone_status': DROPZONE_STATUS,
+            'message': message,
 
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')

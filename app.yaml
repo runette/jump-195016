@@ -9,7 +9,7 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /kiosk
+- url: /kiosk*
   script: kiosk.app
 
 

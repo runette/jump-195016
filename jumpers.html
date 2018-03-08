@@ -47,8 +47,8 @@ Manage Jumpers
                 {{jumper.name}}
             </h6>
         </div>
-        <div class="row nowrap justify-content-right">
-            <span class="card-text nowrap {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 ">Current : {{registration_status[registration.current]}}</span>
+        <div class="col nowrap justify-content-right">
+            <span class="badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 "> {{registration_status[registration.current]}}</span>
         </div>
     </div>
 </a>
@@ -63,9 +63,9 @@ Manage Jumpers
      id="list-{{jumper.key.id()}}" role="tabpanel"
      aria-labelledby="list-{{jumper.key.id()}}-list">
     <form action="/jumpers" id="form-{{jumper.key.id()}}">
-        <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
-        <input type="hidden" name="jumper" value="{{jumper.key.id()}}">
-        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}"/>
+        <input type="hidden" name="jumper" value="{{jumper.key.id()}}"/>
+        <input type="hidden" name="action" value="update"/>
         <div class="form-group row">
             <label for="name" class="col-4 col-form-label">Jumper Name</label>
             <div class="col-8">
@@ -78,7 +78,7 @@ Manage Jumpers
             <div class="col-8">
                 <div class="input-group">
                     <input id="email" name="email" type="text" class="form-control here"
-                                                   required="required" value="{{jumper.email}}" disabled>
+                           required="required" value='{{jumper.email|replace("@gmail.com","")}}' disabled>
                     <div class="input-group-append">
                                     <span class="input-group-text primary ">
                                         @gmail.com
@@ -132,7 +132,7 @@ Manage Jumpers
                 <button name="submit" form="form-{{jumper.key.id()}}" type="submit"
                                                 class="btn btn-primary">Submit
                 </button>
-                <button name="delete" type="submit" class="btn btn-warning" formaction="/jumpers?action=delete">Delete
+                <button name="delete" type="submit" class="btn btn-warning" value="yes">Delete
                 </button>
             </div>
         </div>

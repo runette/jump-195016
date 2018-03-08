@@ -89,8 +89,8 @@ class EndDay(webapp2.RequestHandler):
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = []
         for load in loads:
-            if load.status in [WAITING, HOLD]: load.key.delete()
-            DeleteLoad(load, dropzone_key)
+            if load.status in [WAITING, HOLD]:
+                DeleteLoad(load, dropzone_key)
         Dropzone.put(dropzone)
         template_values = {
             'user_data': user_data,
@@ -180,6 +180,7 @@ class ManageLoads(webapp2.RequestHandler):
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
             'load_status': LOAD_STATUS,
+            'load_colours': LOAD_COLOURS
         }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
@@ -193,16 +194,16 @@ class ManageManifest(webapp2.RequestHandler):
         dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
-        jumper_key = self.request.get('jumper')
+        jumper_key = int(self.request.get('jumper', "0"))
         message = {}
         user = User.get_user(user_data['user'].email()).fetch()[0]
-        if jumper_key:
-            jumper_key = int(jumper_key)
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
+        registrations = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
+        if registrations:
+            registration = registrations[0]
 
         # Set the Load Details
-
         load = Load.get_by_id(load_key)
         loads = [load]
         slot_mega = LoadStructure(loads)
@@ -211,12 +212,15 @@ class ManageManifest(webapp2.RequestHandler):
             if action == "add":
                 if load.status in [WAITING, HOLD]:
                     if slot_size[load.key.id()] > 0:
-                        manifest = Manifest(
-                            load=load_key,
-                            jumper=jumper_key
-                        )
-                        manifest.put()
-
+                        if registration.current == CURRENT:
+                            manifest = Manifest(
+                                load=load_key,
+                                jumper=jumper_key
+                            )
+                            manifest.put()
+                        else:
+                            message.update({'title': "Not Current"})
+                            message.update({'body': "Cannot Manifest a Jumper who is not Current"})
                     else:
                         message.update({'title': "No Slots"})
                         message.update({'body': "You cannot manifest on this load - there are no slots left"})
@@ -248,7 +252,8 @@ class ManageManifest(webapp2.RequestHandler):
             'message': message,
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
-            'load_status': LOAD_STATUS
+            'load_status': LOAD_STATUS,
+            'load_colours': LOAD_COLOURS
         }
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render(template_values))
@@ -260,6 +265,7 @@ class ManageJumpers(webapp2.RequestHandler):
         # GET PARAMETERS
         jumper_key = int(self.request.get('jumper', "0"))
         action = self.request.get('action')
+        delete = self.request.get('delete')
         message = {}
         user = User.get_user(user_data['user'].email()).fetch()[0]
         dropzone_key = int(self.request.get('dropzone'))
@@ -270,28 +276,39 @@ class ManageJumpers(webapp2.RequestHandler):
                 jumper_email = self.request.get('email') + "@gmail.com"
                 jumper = Jumper.get_by_email(jumper_email).fetch()
                 if jumper:
-                    registration = Registration(
-                        jumper=jumper[0].key.id(),
-                        dropzone=dropzone_key,
-                        waiver=datetime.date.today(),
-                        reserve=datetime.date.today(),
-                        current=NOT_CURRENT
-                    )
-                    registration.put()
+                    jumper_key = jumper[0].key.id()
+                    registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
+                    if registration:
+                        message.update({'title': "Double Registration"})
+                        message.update({'body': " Cannot register a jumper twice"})
+                    else:
+                        registration = Registration(
+                            jumper=jumper_key,
+                            dropzone=dropzone_key,
+                            waiver=datetime.date.today(),
+                            reserve=datetime.date.today(),
+                            current=NOT_CURRENT
+                        )
+                        registration.put()
                 else:
                     message.update({'title': "Invalid Jumper"})
                     message.update(
                         {'body': "No Jumper registered with this email"})
-            if action == "update":
+
+            if delete == "yes":
+                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
+                if registration.current == NOT_CURRENT:
+                    registration.key.delete()
+                else:
+                    message.update({'title': "Current Jumper"})
+                    message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
+
+            elif action == "update":
                 registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
                 registration.waiver = datetime.datetime.strptime(self.request.get('waiver'), "%d/%m/%y")
                 registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
                 registration.current = int(self.request.get('current', "1"))
                 registration.put()
-            if action == "delete":
-                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
-                if registration:
-                    registration.key.delete()
         else:
             message.update({'title': "Cannot Registration"})
             message.update(
@@ -389,12 +406,17 @@ class UpdateUser(webapp2.RequestHandler):
                     user_update.dropzone = dropzone_key
                     user_update.put()
             if action == "add":
-                user_update = User(
-                    name=self.request.get('user_email') + "@gmail.com",
-                    dropzone=dropzone_key,
-                    role=VIEW
-                )
-                user_update.put()
+                name = self.request.get('user_email') + "@gmail.com"
+                user_update = User.get_user(name)
+                if user_update:
+                    a = 1
+                else:
+                    user_update = User(
+                        name=name,
+                        dropzone=dropzone_key,
+                        role=VIEW
+                    )
+                    user_update.put()
             if action == "delete":
                 user_update = User.get_by_id(user_key)
                 if user_update:
@@ -475,9 +497,20 @@ class RetimeLoads(webapp2.RequestHandler):
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
             'load_status': LOAD_STATUS,
+            'load_colours': LOAD_COLOURS
         }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
+
+
+class UpdateKiosk(webapp2.RequestHandler):
+    def post(self):
+        dropzone_key = int(self.request.get('dropzone'))
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        dropzone.kiosk_cols = int(self.request.get('cols', str(DEFAULT_KIOSK_NUMBER_OF_COLUMNS)))
+        dropzone.kiosk_rows = int(self.request.get('rows', str(DEFAULT_SLICE_SIZE)))
+        dropzone.put()
+        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=kiosk')
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -493,6 +526,7 @@ app = webapp2.WSGIApplication([
     ('/updatedz', UpdateDz),
     ('/updateuser', UpdateUser),
     ('/retime', RetimeLoads),
-    ('/updatesales', UpdateSales)
+    ('/updatesales', UpdateSales),
+    ('/kioskupdate', UpdateKiosk)
 
 ], debug=True)

@@ -24,13 +24,14 @@ Today's Manifest
             <h6 class="card-title">
                 Time {{load.time.strftime("%H:%M")}}
             </h6>
-            <p class="card-text">{{load_status[load.status]}}</p>
+            <p class="card-text"><span class="{{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">{{load_status[load.status]}}</span>
+            </p>
         </div>
     </div>
 </a>
 <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
     <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+        <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
             Action
         </button>
@@ -47,9 +48,9 @@ Today's Manifest
         </div>
     </div>
     {% if load.status in (0,2) %}
-    <a role="button" class="btn btn-secondary"
-                               href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=5">+5</a>
-    <a role="button" class="btn btn-secondary"
+    <a role="button" class="btn btn-info"
+       href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=5">+5</a>
+    <a role="button" class="btn btn-warning"
        href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=10">+10</a>
     <button type="button" class="btn btn-secondary" data-html='true' data-toggle="popover"
             title="Set Load Time" data-content='
@@ -96,7 +97,9 @@ Today's Manifest
             <div class="row justify-content-between">
                 <div class="col-4">
                     <h6 class="card-title">Load Number {{load.number}}</h6>
-                    <p class="card-text"> Status : {{load_status[load.status]}}</p>
+                    <p class="card-text"><span
+                            class="{{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">Status : {{load_status[load.status]}}</span>
+                    </p>
                 </div>
                 <div class="col-4">
                     <h6 class="card-title"> Time {{load.time.strftime("%H:%M")}} </h6>

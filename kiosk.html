@@ -51,7 +51,9 @@ Jump Kiosk Page
                       <div class="card-body bg-primary text-white">
                           <h5 class="card-title">Load Number {{load.number}}</h5>
                           <h5 class="card-subtitle mb-2 ">Time {{load.time.strftime("%H:%M")}} </h5>
-                          <p class="card-text"> Status : {{load_status[load.status]}}</p>
+                          <p class="card-text"><span
+                                  class="{{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">Status : {{load_status[load.status]}}</span>
+                          </p>
                           <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
                       </div>
                   </div>

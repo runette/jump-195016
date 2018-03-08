@@ -15,13 +15,15 @@ DROPZONE_STATUS = ["Open", "Closed"]
 OPEN = 0
 CLOSED = 1
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
+LOAD_COLOURS = [("bg-primary", "text-white"), ("bg-success", "text-white"), ("bg-warning", "text-white"),
+                ("bg-secondary", "text-white")]
 WAITING = 0
 FLYING = 1
 HOLD = 2
 LANDED = 3
 DEFAULT_LOAD_ID = 0
-REGISTRATION_STATUS = ["Yes", "No"]
-REGISTRATION_COLOURS = [("bg-primary", "text-white"), ("bg-danger", "text-white")]
+REGISTRATION_STATUS = ["Current", "Not Current"]
+REGISTRATION_COLOURS = [("badge-success", ""), ("badge-warning", "")]
 CURRENT = 0
 NOT_CURRENT = 1
 USER_ROLES = ["Admin", "Manifest", "Sales", "View Only"]  # - admin, manifest, sales, view
@@ -31,8 +33,8 @@ ADMIN = 0
 MANIFEST = 1
 SALES = 2
 VIEW = 3
-KIOSK_NUMBER_OF_COLUMNS = 4
-SLICE_SIZE = 4
+DEFAULT_KIOSK_NUMBER_OF_COLUMNS = 4
+DEFAULT_SLICE_SIZE = 4
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -48,6 +50,9 @@ class Dropzone(ndb.Model):
     defaultslotnumber = ndb.IntegerProperty()
     status = ndb.IntegerProperty()
     tag = ndb.StringProperty()
+    kiosk_cols = ndb.IntegerProperty()
+    kiosk_rows = ndb.IntegerProperty()
+
 
 
 class Load(ndb.Model):

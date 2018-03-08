@@ -35,6 +35,15 @@ class Kiosk (webapp2.RequestHandler):
         # Set the Dropzone details
         dropzone = Dropzone.get_by_id(dropzone_key)
 
+        if dropzone.kiosk_rows:
+            slice_size = dropzone.kiosk_rows
+        else:
+            slice_size = DEFAULT_SLICE_SIZE
+        if dropzone.kiosk_cols:
+            load_len = dropzone.kiosk_cols
+        else:
+            load_len = DEFAULT_KIOSK_NUMBER_OF_COLUMNS
+
         if dropzone:
             loads = Load.get_loads(dropzone_key).fetch()
             slot_mega = LoadStructure(loads)
@@ -47,7 +56,7 @@ class Kiosk (webapp2.RequestHandler):
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
             loads = Load.get_loads(DEFAULT_DROPZONE_ID).fetch()
-        load_len = min(len(next_loads), KIOSK_NUMBER_OF_COLUMNS)
+        load_len = min(len(next_loads), load_len)
 
         template_values = {
             'dropzone': dropzone,
@@ -55,14 +64,14 @@ class Kiosk (webapp2.RequestHandler):
             'slot_mega': slot_mega,
             'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
             'load_len': load_len,
-            'slice': SLICE_SIZE,
+            'slice': slice_size,
             'dropzone_status': DROPZONE_STATUS,
-            'load_status': LOAD_STATUS
+            'load_status': LOAD_STATUS,
+            'load_colours': LOAD_COLOURS,
         }
 
         template = JINJA_ENVIRONMENT.get_template('kiosk.html')
         self.response.write(template.render(template_values))
-
 
 
 app = webapp2.WSGIApplication([

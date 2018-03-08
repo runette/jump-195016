@@ -9,9 +9,33 @@ Manage DZ Configurations
 
 
 {% block main %}
-
-
 <h1>Kiosk Configuration</h1>
-
-
+<form action="/kioskupdate" method="post">
+    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}"/>
+    <div class="form-group row ">
+        <label class="control-label requiredField col-4" for="cols">
+            Number of Loads on one screen
+            <span class="asteriskField">
+                    *
+                </span>
+        </label>
+        <input class="form-control here col-4" id="cols" name="cols" type="text" value="{{dropzone.kiosk_cols}}"/>
+    </div>
+    <div class="form-group row">
+        <label class="control-label requiredField col-4" for="rows">
+            Number of rows shown on the Screen
+            <span class="asteriskField">
+                    *
+                </span>
+        </label>
+        <input class="form-control here col-4" id="rows" name="rows" type="text" value="{{dropzone.kiosk_rows}}"/>
+    </div>
+    <div class="form-group">
+        <div>
+            <button class="btn btn-primary " name="submit" type="submit">
+                Submit
+            </button>
+        </div>
+    </div>
+</form>
 {% endblock %}

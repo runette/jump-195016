@@ -27,8 +27,8 @@ REGISTRATION_COLOURS = [("badge-success", ""), ("badge-warning", "")]
 CURRENT = 0
 NOT_CURRENT = 1
 USER_ROLES = ["Admin", "Manifest", "Sales", "View Only"]  # - admin, manifest, sales, view
-ROLE_COLOURS = [("bg-primary", "text-white"), ("bg-success", "text-white"), ("bg-info", "text-white"),
-                ("bg-secondary", "text-white")]
+ROLE_COLOURS = [("badge-primary", ""), ("badge-success", ""), ("badge-info", ""),
+                ("badge-secondary", "")]
 ADMIN = 0
 MANIFEST = 1
 SALES = 2

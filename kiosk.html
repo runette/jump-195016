@@ -9,19 +9,25 @@ Jump Kiosk Page
 
     $.fn.infiniteScrollUp = function () {
         var self = this, kids = self.children();
-        kids.slice({;
-        {
+        if (kids.length > {{
             slice
         }
-    }).
-        hide();
-        setInterval(function () {
-            var show_this = kids.filter(':hidden').eq(0);
-            show_this.show();
-            kids.eq(0).hide();
-            kids.eq(0).appendTo(self);
-            kids = self.children()
-        }, 3000);
+    })
+        {
+            kids.slice({;
+            {
+                slice
+            }
+        }).
+            hide();
+            setInterval(function () {
+                var show_this = kids.filter(':hidden').eq(0);
+                show_this.show();
+                kids.eq(0).hide();
+                kids.eq(0).appendTo(self);
+                kids = self.children()
+            }, 3000);
+        }
         return this
     };
     {%
@@ -52,7 +58,7 @@ Jump Kiosk Page
                           <h5 class="card-title">Load Number {{load.number}}</h5>
                           <h5 class="card-subtitle mb-2 ">Time {{load.time.strftime("%H:%M")}} </h5>
                           <p class="card-text"><span
-                                  class="{{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">Status : {{load_status[load.status]}}</span>
+                                  class=" badge {{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">Status : {{load_status[load.status]}}</span>
                           </p>
                           <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
                       </div>

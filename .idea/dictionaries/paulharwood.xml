@@ -2,7 +2,10 @@
   <dictionary name="paulharwood">
     <words>
       <w>dropzone</w>
+      <w>freeslots</w>
+      <w>retime</w>
       <w>slotsize</w>
+      <w>struct</w>
     </words>
   </dictionary>
 </component>

@@ -45,24 +45,25 @@ class Kiosk (webapp2.RequestHandler):
             load_len = DEFAULT_KIOSK_NUMBER_OF_COLUMNS
 
         if dropzone:
-            loads = Load.get_loads(dropzone_key).fetch()
-            slot_mega = LoadStructure(loads)
-            next_loads = []
-            for load in loads:
-                if load.status == LANDED:
-                    continue
-                else:
-                    next_loads.append(load)
+            load_struct = LoadStructure(dropzone_key)
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
-            loads = Load.get_loads(DEFAULT_DROPZONE_ID).fetch()
+            load_struct = LoadStructure(DEFAULT_DROPZONE_ID)
+        loads = load_struct.loads
+        slot_mega = load_struct.slot_mega
+        next_loads = []
+        for load in loads:
+            if load.status == LANDED:
+                continue
+            else:
+                next_loads.append(load)
         load_len = min(len(next_loads), load_len)
 
         template_values = {
             'dropzone': dropzone,
             'next_loads': next_loads,
             'slot_mega': slot_mega,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'slotsize': load_struct.freeslots(),
             'load_len': load_len,
             'slice': slice_size,
             'dropzone_status': DROPZONE_STATUS,
@@ -73,9 +74,11 @@ class Kiosk (webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('kiosk.html')
         self.response.write(template.render(template_values))
 
-
-app = webapp2.WSGIApplication([
-        ('/kiosk', Kiosk),
-
-
-], debug=True)
+class UpdateKiosk(webapp2.RequestHandler):
+    def post(self):
+        dropzone_key = int(self.request.get('dropzone'))
+        dropzone = Dropzone.get_by_id(dropzone_key)
+        dropzone.kiosk_cols = int(self.request.get('cols', str(DEFAULT_KIOSK_NUMBER_OF_COLUMNS)))
+        dropzone.kiosk_rows = int(self.request.get('rows', str(DEFAULT_SLICE_SIZE)))
+        dropzone.put()
+        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=kiosk')

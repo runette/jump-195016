@@ -2,11 +2,12 @@ import datetime
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from google.appengine.api import memcache
 
 import os
 import jinja2
 
-#[START Global variables]
+# START Global variables
 
 DEFAULT_DROPZONE_NAME = "No Dropzone"  # deprecated
 DEFAULT_DROPZONE_ID = 5659313586569216
@@ -40,25 +41,38 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-#[END Global variables]
+# [END Global variables]
 
 
 class Dropzone(ndb.Model):
     name = ndb.StringProperty()
-    defaultloadtime = ndb.IntegerProperty()
-    defaultloadnumber = ndb.IntegerProperty()
-    defaultslotnumber = ndb.IntegerProperty()
+    default_load_time = ndb.IntegerProperty()
+    default_load_number = ndb.IntegerProperty()
+    default_slot_number = ndb.IntegerProperty()
     status = ndb.IntegerProperty()
     tag = ndb.StringProperty()
     kiosk_cols = ndb.IntegerProperty()
     kiosk_rows = ndb.IntegerProperty()
 
+    @classmethod
+    def _get_by_id(cls, id, parent=None, **ctx_options):
+        dropzone = memcache.get(str(id))
+        if dropzone is not None :
+            return dropzone
+        else :
+            dropzone = cls.get_by_id(id, parent, ctx_options)
+            memcache.add(str(id),dropzone)
+            return dropzone
+
+    def _put(self, **ctx_options):
+        memcache.delete(str(self.key.id()))
+        return self.put(self, ctx_options)
 
 
 class Load(ndb.Model):
     number = ndb.IntegerProperty()
     slots = ndb.IntegerProperty()      # total slots on the load
-    precededby = ndb.IntegerProperty()
+    preceded_by = ndb.IntegerProperty()
     time = ndb.TimeProperty()
     date = ndb.DateProperty(auto_now_add=True)
     status = ndb.IntegerProperty()
@@ -69,13 +83,15 @@ class Load(ndb.Model):
         return cls.query(Load.date == datetime.date.today(),Load.dropzone == dropzone_key).order(Load.number)
 
     @classmethod
-    def add_load (cls, loads, dropzone_key) :
+    def add_load(cls, dropzone_key):
         dropzone = Dropzone.get_by_id(dropzone_key)
+        ls = LoadStructure(dropzone_key)
+        loads = ls.loads
         last = len(loads) - 1
         time_increment = datetime.timedelta(minutes=dropzone.defaultloadtime)
         if last >= 0:
             load = Load(number=loads[last].number + 1,
-                        slots=dropzone.defaultslotnumber,
+                        slots=dropzone.defaultloadnumber,
                         precededby=loads[last].key.id(),
                         status=WAITING,
                         time=NextLoadTimeDz(loads[last], dropzone),
@@ -91,7 +107,6 @@ class Load(ndb.Model):
                 dropzone=dropzone_key
             )
         return load
-
 
 
 class Manifest(ndb.Model):
@@ -114,8 +129,29 @@ class User(ndb.Model):
     role = ndb.IntegerProperty()
 
     @classmethod
+    def _get_by_id(cls, id, parent=None, **ctx_options):
+        user = memcache.get(str(id))
+        if user is not None :
+            return user
+        else :
+            user = cls.get_by_id(id, parent, ctx_options)
+            memcache.add(str(id),user)
+            return user
+
+    def _put(self, **ctx_options):
+        memcache.delete(str(self.key.id()))
+        self.put(ctx_options)
+
+    @classmethod
     def get_user (cls, name) :
-        return cls.query(User.name == name)
+        q = cls.query(User.name == name).fetch(keys_only=True)
+        if q:
+            id = q[0].id()
+            user = memcache.get(str(id))
+            if user is not None:
+                return user
+            else:
+                return cls.get_by_id(id)
 
     @classmethod
     def get_by_dropzone(cls, dropzone_key):
@@ -136,6 +172,10 @@ class Registration(ndb.Model) :
     @classmethod
     def get_by_jumper(cls, dropzone_key, jumper_key):
         return cls.query(Registration.dropzone == dropzone_key, Registration.jumper == jumper_key)
+
+    @classmethod
+    def get_all_by_jumper(cls, jumper_key):
+        return cls.query(Registration.jumper == jumper_key)
 
 
 class Sale(ndb.Model) :
@@ -163,40 +203,95 @@ class SalesPackage(ndb.Model):
 class Jumper(ndb.Model):
     name = ndb.StringProperty()
     email = ndb.StringProperty()
+    google_id = ndb.StringProperty()
 
     @classmethod
     def get_by_email(cls, email):
         return cls.query(Jumper.email == email)
 
-def LoadStructure (loads) :
-    manifests = Manifest.query().fetch()
+    @classmethod
+    def get_by_gid(cls, gid):
+        return cls.query(Jumper.google_id == gid)
+
+
+# Creates a LoadStructure - loads and manifest - for dropzone for today using the copy in memcache if exists.
+class LoadStructure:
+    loads = []
     slot_mega = {}
-    for load in loads :
-        slots = []
-        for manifest in manifests :
-            if manifest.load == load.key.id() :
-                slots.append(Jumper.get_by_id(manifest.jumper))
-        slot_mega.update({load.key.id() : slots})
-    return slot_mega
+    load_struct = ()
+    dropzone_key = DEFAULT_DROPZONE_ID
 
+    def __init__(self, dropzone_key):
+        key = str(dropzone_key) + "ls"
+        self.load_struct = memcache.get(key)
+        self.dropzone_key = dropzone_key
+        if self.load_struct is None :
+            self.load_struct = LoadStructure.refresh(dropzone_key)
+        self.loads = self.load_struct[0]
+        self.slot_mega = self.load_struct[1]
 
-def FreeSlots(loads, slot_mega, dropzone_key):
-    frees = {}
-    slotnumber = Dropzone.get_by_id(dropzone_key).defaultslotnumber
-    if slotnumber:
+    # refreshes the memcache from the permanent store
+    @classmethod
+    def refresh(cls,dropzone_key):
+        loads = Load.get_loads(dropzone_key).fetch()
+        manifests = Manifest.query().fetch()
+        slot_mega = {}
         for load in loads:
-            free = slotnumber - len(slot_mega[load.key.id()])
-            frees.update({load.key.id(): free})
-    return frees
+            slots = []
+            for manifest in manifests:
+                if manifest.load == load.key.id():
+                    slots.append(Jumper.get_by_id(manifest.jumper))
+            slot_mega.update({load.key.id(): slots})
+        load_struct = (loads, slot_mega)
+        key = str(dropzone_key) + "ls"
+        memcache.add(key,load_struct)
+        return load_struct
+
+    #creates a dict showing the number of freeslots for each load in the LoadStructure
+    def freeslots(self):
+        frees = {}
+        slot_number = Dropzone.get_by_id(self.dropzone_key).default_slot_number
+        if slot_number:
+            for load in self.loads:
+                free = slot_number - len(self.slot_mega[load.key.id()])
+                frees.update({load.key.id(): free})
+        return frees
+
+    # retimes the load Structure using the preceded_by parameter
+    def retime_chain(self):
+        flag = True
+        while flag:
+            flag = False
+            load = self.loads[0]
+            for next_load in self.loads:
+                if next_load.preceded_by == load.key.id():
+                    if next_load.status in [WAITING, HOLD]:
+                        next_load.time = NextLoadTimeDz(load, self.dropzone_key)
+                    load = next_load
+                    load.put()
+                    flag = True
+                    break
+        return self
 
 
-def JumperStructure (dropzone_key) :
-    registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-    jumpers = []
-    for registration in registrations :
-        jumper_key = registration.jumper
-        jumpers.append((Jumper.get_by_id(jumper_key), registration))
-    return jumpers
+class JumperStructure (type) :
+    @classmethod
+    def get(mcs, dropzone_key) :
+        jumpers = memcache.get(str(dropzone_key) + "js")
+        if jumpers is not None :
+            return jumpers
+        else :
+            return JumperStructure.refresh(dropzone_key)
+
+    @classmethod
+    def refresh(mcs, dropzone_key) :
+        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
+        jumpers = []
+        for registration in registrations:
+            jumper_key = registration.jumper
+            jumpers.append((Jumper.get_by_id(jumper_key), registration))
+        memcache.add(str(dropzone_key) + "js",jumpers)
+        return jumpers
 
 
 def UserStatus (uri) :
@@ -213,18 +308,21 @@ def UserStatus (uri) :
 
 # Deletes a load and all associated Manifests
 def DeleteLoad(load, dropzone_key):
-    loads = Load.get_loads(dropzone_key).fetch()
+    ls = LoadStructure(dropzone_key)
     manifests = Manifest.get_by_load(load.key.id())
-    for next_load in loads:
-        if next_load.precededby == load.key.id():
-            next_load.precededby = load.precededby
+    for next_load in ls.loads:
+        if next_load.preceded_by == load.key.id():
+            next_load.preceded_by = load.precededby
             next_load.put()
     load.key.delete()
-    # Have to refresh loads to avoid re-inserting the deleted load
-    loads = Load.get_loads(dropzone_key).fetch()
+    for manifest in manifests :
+        manifest.key.delete()
+
+    # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
+    loads = LoadStructure.refresh(dropzone_key)[0]
     # Retime all loads
     if len(loads) != 0:
-        loads = RetimeChain(loads[0], loads, Dropzone.get_by_id(dropzone_key))
+        ls.retimechain()
     for manifest in manifests :
         manifest.key.delete()
     return
@@ -241,17 +339,5 @@ def NextLoadTimeDz(previous_load, dropzone):
     return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.defaultloadtime))
 
 
-# retimes a list of loads using the precededby parameter - starting with load
-def RetimeChain(load, loads, dropzone):
-    flag = True
-    while flag:
-        flag = False
-        for next_load in loads:
-            if next_load.precededby == load.key.id():
-                if next_load.status in [WAITING, HOLD]:
-                    next_load.time = NextLoadTimeDz(load, dropzone)
-                load = next_load
-                load.put()
-                flag = True
-                break
-    return loads
+
+

@@ -1,5 +1,5 @@
 application: jump-195016
-version: 1
+version: 13
 runtime: python27
 api_version: 1
 threadsafe: yes
@@ -9,10 +9,6 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /kiosk*
-  script: kiosk.app
-
-
 - url: /bootstrap
   static_dir: bootstrap
 
@@ -20,8 +16,7 @@ handlers:
   static_dir: bootstrap-datetimepicker
 
 - url: .*
-  script: manage.app
-
+  script: jump.app
 
 libraries:
 - name: webapp2

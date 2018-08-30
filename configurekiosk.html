@@ -10,7 +10,7 @@ Manage DZ Configurations
 
 {% block main %}
 <h1>Kiosk Configuration</h1>
-<form action="/kioskupdate" method="post">
+<form action="/kiosk/update" method="get">
     <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}"/>
     <div class="form-group row ">
         <label class="control-label requiredField col-4" for="cols">
@@ -29,6 +29,19 @@ Manage DZ Configurations
                 </span>
         </label>
         <input class="form-control here col-4" id="rows" name="rows" type="text" value="{{dropzone.kiosk_rows}}"/>
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-sm-2" for="url">Kiosk URL:</label>
+        <div class="col-sm-10">
+            <span class="form-control-static" id="url">
+                <a href='{{ request }}/kiosk?dropzone={{dropzone.key.id()}}' aria-describedby="urlwarning">
+                    {{ request }}/kiosk?dropzone={{dropzone.key.id()}}
+                </a>
+            </span>
+            <small id="urlwarning" class="form-text text-muted">
+                It is not recommended to access the kiosk by clicking since the kiosk will then be logged in as you.<BR>Kiosks do not need to be logged in.
+            </small>
+        </div>
     </div>
     <div class="form-group">
         <div>

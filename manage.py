@@ -32,7 +32,7 @@ class MainPage(webapp2.RequestHandler):
 
         if user:
             # Get the dropzone details based on the user
-            dropzone_key = User.get_user(user.email()).fetch()[0].dropzone
+            dropzone_key = User.get_user(user.email()).dropzone
             dropzone = Dropzone.get_by_id(dropzone_key)
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
@@ -58,10 +58,10 @@ class StartDay(webapp2.RequestHandler):
             #change status to open and add a default number of loads
             dropzone.status = OPEN
             Dropzone.put(dropzone)
-            for i in range(dropzone.defaultloadnumber):
-                loads = Load.get_loads(dropzone_key).fetch()
-                Load.add_load(loads, dropzone_key).put()
-
+            if len(LoadStructure(dropzone_key).loads) is 0 :
+                for i in range(dropzone.default_load_number):
+                    Load.add_load( dropzone_key).put()
+            LoadStructure.refresh(dropzone_key)
         elif dropzone.status == OPEN:
             message.update({'title': "Already Open"})
             message.update(({'body': "The dropzone is already open"}))
@@ -132,21 +132,22 @@ class ManageLoads(webapp2.RequestHandler):
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
         message = {}
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
         dropzone_status = dropzone.status
         # Set the Load Details
-        loads = Load.get_loads(dropzone_key).fetch()
         if user.role in [ADMIN, MANIFEST]:
             if action == "takeoff":
                 load = Load.get_by_id(load_key)
                 load.status = FLYING
                 load.put()
+                LoadStructure.refresh(dropzone_key)
             if action == "add":
                 if dropzone_status == OPEN:
-                    Load.add_load(loads, dropzone_key).put()
+                    Load.add_load(dropzone_key).put()
+                    LoadStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Cannot Add"})
                     message.update(
@@ -155,14 +156,17 @@ class ManageLoads(webapp2.RequestHandler):
                 load = Load.get_by_id(load_key)
                 load.status = LANDED
                 load.put()
+                LoadStructure.refresh(dropzone_key)
             if action == "hold":
                 load = Load.get_by_id(load_key)
                 load.status = HOLD
                 load.put()
+                LoadStructure.refresh(dropzone_key)
             if action == "delete":
                 load = Load.get_by_id(load_key)
                 if load.status in [WAITING, HOLD]:
                     DeleteLoad(load, dropzone_key)
+                    LoadStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -174,15 +178,16 @@ class ManageLoads(webapp2.RequestHandler):
                 {'body': "You do not have Manifest rights "})
 
         # refresh loads
-        loads = Load.get_loads(dropzone_key).fetch()
-        slot_mega = LoadStructure(loads)
+        load_struct = LoadStructure(dropzone_key)
+        loads = load_struct.loads
+        slot_mega = load_struct.slot_mega
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'loads': loads,
             'slot_mega': slot_mega,
             'message': message,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'slotsize': load_struct.freeslots(),
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
             'load_status': LOAD_STATUS,
@@ -202,7 +207,7 @@ class ManageManifest(webapp2.RequestHandler):
         action = self.request.get('action')
         jumper_key = int(self.request.get('jumper', "0"))
         message = {}
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
         registrations = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
@@ -211,9 +216,8 @@ class ManageManifest(webapp2.RequestHandler):
 
         # Set the Load Details
         load = Load.get_by_id(load_key)
-        loads = [load]
-        slot_mega = LoadStructure(loads)
-        slot_size = FreeSlots(loads, slot_mega, dropzone_key)
+        load_struct = LoadStructure(dropzone_key)
+        slot_size = load_struct.freeslots()
         if user.role in [ADMIN, MANIFEST]:
             if action == "add":
                 if load.status in [WAITING, HOLD]:
@@ -224,6 +228,7 @@ class ManageManifest(webapp2.RequestHandler):
                                 jumper=jumper_key
                             )
                             manifest.put()
+                            LoadStructure.refresh(dropzone_key)
                         else:
                             message.update({'title': "Not Current"})
                             message.update({'body': "Cannot Manifest a Jumper who is not Current"})
@@ -238,6 +243,7 @@ class ManageManifest(webapp2.RequestHandler):
             if action == "delete":
                 if load.status in [WAITING, HOLD]:
                     Manifest.delete_manifest(load_key, jumper_key)
+                    LoadStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -248,13 +254,19 @@ class ManageManifest(webapp2.RequestHandler):
             message.update(
                 {'body': "You do not have Manifest rights "})
 
+        #Refresh the Manifests
+        LoadStructure.refresh(dropzone_key)
+        load_struct = LoadStructure(dropzone_key)
+        slot_mega = load_struct.slot_mega
+        slot_size = load_struct.freeslots()
+        jumpers=JumperStructure.get(dropzone_key)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'load': load,
-            'slot_mega': LoadStructure(loads),
-            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
-            'jumpers': JumperStructure(dropzone_key),
+            'slot_mega': slot_mega,
+            'slotsize': slot_size,
+            'jumpers': jumpers,
             'message': message,
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
@@ -273,7 +285,7 @@ class ManageJumpers(webapp2.RequestHandler):
         action = self.request.get('action')
         delete = self.request.get('delete')
         message = {}
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         dropzone = Dropzone.get_by_id(dropzone_key)
 
@@ -296,6 +308,7 @@ class ManageJumpers(webapp2.RequestHandler):
                             current=NOT_CURRENT
                         )
                         registration.put()
+                        JumperStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Invalid Jumper"})
                     message.update(
@@ -305,6 +318,7 @@ class ManageJumpers(webapp2.RequestHandler):
                 registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
                 if registration.current == NOT_CURRENT:
                     registration.key.delete()
+                    JumperStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Current Jumper"})
                     message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
@@ -315,6 +329,7 @@ class ManageJumpers(webapp2.RequestHandler):
                 registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
                 registration.current = int(self.request.get('current', "1"))
                 registration.put()
+                JumperStructure.refresh(dropzone_key)
         else:
             message.update({'title': "Cannot Registration"})
             message.update(
@@ -322,7 +337,7 @@ class ManageJumpers(webapp2.RequestHandler):
 
         # refresh registrations
         registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        jumpers = JumperStructure(dropzone_key)
+        jumpers = JumperStructure.get(dropzone_key)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -341,7 +356,7 @@ class ManageJumpers(webapp2.RequestHandler):
 class ManageDz(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         message = {}
         if user.role == ADMIN:
             # Get the dropzone details based on the user
@@ -361,8 +376,6 @@ class ManageDz(webapp2.RequestHandler):
             response = "configurekiosk.html"
         else:
             response = "configuredz.html"
-
-
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -372,7 +385,8 @@ class ManageDz(webapp2.RequestHandler):
             'role_colours': ROLE_COLOURS,
             'active': 4,
             'dropzone_status': DROPZONE_STATUS,
-            'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch()
+            'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch(),
+            'request' : self.request.application_url,
 
         }
         template = JINJA_ENVIRONMENT.get_template(response)
@@ -382,15 +396,15 @@ class ManageDz(webapp2.RequestHandler):
 class UpdateDz(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         if user.role == ADMIN:
             # GET PARAMETERS
             dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.name = self.request.get('dropzone_name')
-            dropzone.defaultslotnumber = int(self.request.get('default_slot_number'))
-            dropzone.defaultloadnumber = int(self.request.get('default_load_number'))
-            dropzone.defaultloadtime = int(self.request.get('default_load_time'))
+            dropzone.default_slot_number = int(self.request.get('default_slot_number'))
+            dropzone.default_load_number = int(self.request.get('default_load_number'))
+            dropzone.default_load_time = int(self.request.get('default_load_time'))
             dropzone.tag = self.request.get('dropzone_tag')
             dropzone.put()
         self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=dz')
@@ -399,7 +413,7 @@ class UpdateDz(webapp2.RequestHandler):
 class UpdateUser(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         action = self.request.get('action')
         user_key = int(self.request.get('user', '-1'))
@@ -433,7 +447,7 @@ class UpdateUser(webapp2.RequestHandler):
 class UpdateSales(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         action = self.request.get('action')
         package_key = int(self.request.get('package', '-1'))
@@ -463,7 +477,7 @@ class UpdateSales(webapp2.RequestHandler):
 class RetimeLoads(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email()).fetch()[0]
+        user = User.get_user(user_data['user'].email())
         message = {}
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
@@ -472,8 +486,6 @@ class RetimeLoads(webapp2.RequestHandler):
         dropzone = Dropzone.get_by_id(dropzone_key)
         if user.role in [ADMIN, MANIFEST]:
             # Set the Dropone details
-            dropzone = Dropzone.get_by_id(dropzone_key)
-            loads = Load.get_loads(dropzone_key).fetch()
             load = Load.get_by_id(load_key)
             if action == "5":
                 load.time = NextLoadTime(load, datetime.timedelta(minutes=5))
@@ -483,7 +495,8 @@ class RetimeLoads(webapp2.RequestHandler):
                 load.put()
             if action == "select":
                 load.time = NextLoadTime(load, datetime.timedelta(minutes=0))
-            loads = RetimeChain(load, loads, dropzone)
+            load_struct = LoadStructure(dropzone_key)
+            load_struct.retime_chain()
 
         else:
             message.update({'title': "Cannot Manifest"})
@@ -491,15 +504,17 @@ class RetimeLoads(webapp2.RequestHandler):
                 {'body': "You do not have Manifest rights "})
 
         # refresh loads
-        loads = Load.get_loads(dropzone_key).fetch()
-        slot_mega = LoadStructure(loads)
+        load_struct = LoadStructure(dropzone_key)
+        loads = load_struct.loads
+        slot_mega = load_struct.slot_mega
+        slot_size = load_struct.freeslots()
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'loads': loads,
             'slot_mega': slot_mega,
             'message': message,
-            'slotsize': FreeSlots(loads, slot_mega, dropzone_key),
+            'slotsize': slot_size,
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
             'load_status': LOAD_STATUS,
@@ -509,30 +524,5 @@ class RetimeLoads(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
 
-class UpdateKiosk(webapp2.RequestHandler):
-    def post(self):
-        dropzone_key = int(self.request.get('dropzone'))
-        dropzone = Dropzone.get_by_id(dropzone_key)
-        dropzone.kiosk_cols = int(self.request.get('cols', str(DEFAULT_KIOSK_NUMBER_OF_COLUMNS)))
-        dropzone.kiosk_rows = int(self.request.get('rows', str(DEFAULT_SLICE_SIZE)))
-        dropzone.put()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=kiosk')
 
-app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/loads', ManageLoads),
-    ('/startday', StartDay),
-    ('/endday', EndDay),
-    ('/sales', ManageSales),
-    ('/manifest', ManageManifest),
-    ('/loadaction', ManageLoads),
-    ('/manifestaction', ManageManifest),
-    ('/jumpers', ManageJumpers),
-    ('/configdz', ManageDz),
-    ('/updatedz', UpdateDz),
-    ('/updateuser', UpdateUser),
-    ('/retime', RetimeLoads),
-    ('/updatesales', UpdateSales),
-    ('/kioskupdate', UpdateKiosk)
 
-], debug=True)

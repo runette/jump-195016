@@ -17,6 +17,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route ('/jumpers', handler=ManageJumpers),
     webapp2.Route ('/configdz', handler=ManageDz),
     webapp2.Route ('/updatedz', handler=UpdateDz),
+    webapp2.Route ('/newdz', handler=NewDz),
     webapp2.Route ('/updateuser', handler=UpdateUser),
     webapp2.Route ('/retime', handler=RetimeLoads),
     webapp2.Route ('/updatesales', handler=UpdateSales),

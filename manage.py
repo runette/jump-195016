@@ -523,6 +523,22 @@ class RetimeLoads(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
 
-
+class NewDz(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = User.get_user(user_data['user'].email())
+        dropzone = Dropzone(name="New Dropzone",
+                default_load_time=0,
+                default_load_number=0,
+                default_slot_number=0,
+                status=CLOSED,
+                tag="",
+                kiosk_cols=1,
+                kiosk_rows=1,)
+        dropzone.put()
+        user.dropzone = dropzone.key.id()
+        user.role = ADMIN
+        user.put()
+        self.redirect('/configdz?dropzone=' + str(dropzone.key.id()) + '&action=dz')
 
 

@@ -10,7 +10,7 @@ import jinja2
 # START Global variables
 
 DEFAULT_DROPZONE_NAME = "No Dropzone"  # deprecated
-DEFAULT_DROPZONE_ID = 5659313586569216
+DEFAULT_DROPZONE_ID = 0
 DEFAULT_DROPZONE_STATUS = "No Status"  # deprecated
 DROPZONE_STATUS = ["Open", "Closed"]
 OPEN = 0
@@ -55,18 +55,30 @@ class Dropzone(ndb.Model):
     kiosk_rows = ndb.IntegerProperty()
 
     @classmethod
-    def _get_by_id(cls, id, parent=None, **ctx_options):
-        dropzone = memcache.get(str(id))
-        if dropzone is not None :
-            return dropzone
-        else :
-            dropzone = cls.get_by_id(id, parent, ctx_options)
-            memcache.add(str(id),dropzone)
-            return dropzone
+    def get_by_id(cls, id, parent=None, **ctx_options):
+        if id == DEFAULT_DROPZONE_ID or id == None:
+            dropzone = Dropzone(
+                id=0,
+                name="default",
+                default_load_time=0,
+                default_load_number=0,
+                default_slot_number=0,
+                status=CLOSED,
+                tag="",
+                kiosk_cols=1,
+                kiosk_rows=1,
+            )
+        else:
+            dropzone = memcache.get(str(id))
+            if dropzone is None :
+                dropzone = cls._get_by_id(id, parent, **ctx_options)
+                memcache.add(str(id),dropzone)
+        return dropzone
 
-    def _put(self, **ctx_options):
-        memcache.delete(str(self.key.id()))
-        return self.put(self, ctx_options)
+    def put(self, **ctx_options):
+        if self.has_complete_key():
+            memcache.delete(str(self.key.id()))
+        return self._put( **ctx_options)
 
 
 class Load(ndb.Model):
@@ -88,11 +100,11 @@ class Load(ndb.Model):
         ls = LoadStructure(dropzone_key)
         loads = ls.loads
         last = len(loads) - 1
-        time_increment = datetime.timedelta(minutes=dropzone.defaultloadtime)
+        time_increment = datetime.timedelta(minutes=dropzone.default_load_time)
         if last >= 0:
             load = Load(number=loads[last].number + 1,
-                        slots=dropzone.defaultloadnumber,
-                        precededby=loads[last].key.id(),
+                        slots=dropzone.default_load_number,
+                        preceded_by=loads[last].key.id(),
                         status=WAITING,
                         time=NextLoadTimeDz(loads[last], dropzone),
                         dropzone=dropzone_key
@@ -100,8 +112,8 @@ class Load(ndb.Model):
         else:
             load = Load(
                 number=1,
-                slots=dropzone.defaultloadnumber,
-                precededby=-1,
+                slots=dropzone.default_load_number,
+                preceded_by=-1,
                 status=WAITING,
                 time=(datetime.datetime.now() + time_increment).time(),
                 dropzone=dropzone_key
@@ -129,18 +141,19 @@ class User(ndb.Model):
     role = ndb.IntegerProperty()
 
     @classmethod
-    def _get_by_id(cls, id, parent=None, **ctx_options):
+    def get_by_id(cls, id, parent=None, **ctx_options):
         user = memcache.get(str(id))
         if user is not None :
             return user
         else :
-            user = cls.get_by_id(id, parent, ctx_options)
+            user = cls._get_by_id(id, parent, **ctx_options)
             memcache.add(str(id),user)
             return user
 
-    def _put(self, **ctx_options):
+    def put(self, **ctx_options):
+        self._put(**ctx_options)
         memcache.delete(str(self.key.id()))
-        self.put(ctx_options)
+
 
     @classmethod
     def get_user (cls, name) :
@@ -152,6 +165,13 @@ class User(ndb.Model):
                 return user
             else:
                 return cls.get_by_id(id)
+        else:
+            user = User(
+                name=name,
+                dropzone=DEFAULT_DROPZONE_ID,
+            )
+            user.put()
+            return user
 
     @classmethod
     def get_by_dropzone(cls, dropzone_key):
@@ -229,6 +249,7 @@ class LoadStructure:
             self.load_struct = LoadStructure.refresh(dropzone_key)
         self.loads = self.load_struct[0]
         self.slot_mega = self.load_struct[1]
+        return
 
     # refreshes the memcache from the permanent store
     @classmethod
@@ -260,17 +281,18 @@ class LoadStructure:
     # retimes the load Structure using the preceded_by parameter
     def retime_chain(self):
         flag = True
-        while flag:
-            flag = False
-            load = self.loads[0]
-            for next_load in self.loads:
-                if next_load.preceded_by == load.key.id():
-                    if next_load.status in [WAITING, HOLD]:
-                        next_load.time = NextLoadTimeDz(load, self.dropzone_key)
-                    load = next_load
-                    load.put()
-                    flag = True
-                    break
+        if len(self.loads) !=0 :
+            while flag:
+                flag = False
+                load = self.loads[0]
+                for next_load in self.loads:
+                    if next_load.preceded_by == load.key.id():
+                        if next_load.status in [WAITING, HOLD]:
+                            next_load.time = NextLoadTimeDz(load, self.dropzone_key)
+                        load = next_load
+                        load.put()
+                        flag = True
+                        break
         return self
 
 
@@ -312,7 +334,7 @@ def DeleteLoad(load, dropzone_key):
     manifests = Manifest.get_by_load(load.key.id())
     for next_load in ls.loads:
         if next_load.preceded_by == load.key.id():
-            next_load.preceded_by = load.precededby
+            next_load.preceded_by = load.preceded_by
             next_load.put()
     load.key.delete()
     for manifest in manifests :
@@ -322,7 +344,7 @@ def DeleteLoad(load, dropzone_key):
     loads = LoadStructure.refresh(dropzone_key)[0]
     # Retime all loads
     if len(loads) != 0:
-        ls.retimechain()
+        ls.retime_chain()
     for manifest in manifests :
         manifest.key.delete()
     return

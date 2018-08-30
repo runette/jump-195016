@@ -4,8 +4,12 @@ Manage DZ Configurations
 {% endblock %}
 
 {% block sidebar %}
-
+<form action="/newdz" method="post">
+    <button class='btn btn-primary' name="New Dropzone" type="submit">New Dropzone</button>
+</form>
 {% endblock %}
+
+{% if dropzone.key.id != None %}
 
 {% block main %}
 <div class="row">
@@ -38,7 +42,7 @@ Manage DZ Configurations
                 <div class="col-8">
                     <div class="input-group">
                         <input id="default_slot_number" name="default_slot_number"
-                               value="{{dropzone.defaultslotnumber}}" type="text" required="required"
+                               value="{{dropzone.default_slot_number}}" type="text" required="required"
                                class="form-control here">
                         <div class="input-group-append">
                                         <span class="input-group-text">
@@ -53,7 +57,7 @@ Manage DZ Configurations
                 <div class="col-8">
                     <div class="input-group">
                         <input id="default_load_number" name="default_load_number"
-                               value="{{dropzone.defaultloadnumber}}" type="text"
+                               value="{{dropzone.default_load_number}}" type="text"
                                aria-describedby="default_load_numberHelpBlock" class="form-control here">
                         <div class="input-group-append">
                                             <span class="input-group-text">
@@ -71,7 +75,7 @@ Manage DZ Configurations
                 <div class="col-8">
                     <div class="input-group">
                         <input id="default_load_time" name="default_load_time"
-                               value="{{dropzone.defaultloadtime}}" type="text"
+                               value="{{dropzone.default_load_time}}" type="text"
                                aria-describedby="default_load_timeHelpBlock" class="form-control here">
                         <div class="input-group-append">
                                             <span class="input-group-text">
@@ -94,3 +98,4 @@ Manage DZ Configurations
                     </div>
                 </div>
 {% endblock %}
+{% endif %}

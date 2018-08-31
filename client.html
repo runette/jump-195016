@@ -1,9 +1,6 @@
-{% extends "template.html" %}
+{% extends "template2.html" %}
 {% block title %}
 Jump Client
-{% endblock %}
-
-{% block script %}
 {% endblock %}
 
 {% block navbar_left %}
@@ -12,16 +9,16 @@ Jump Client
             <a class="nav-link" href="/client">Home</a>
         </li>
         <li class="nav-item {% if active == 1 %}active {% endif %}">
-            <a class="nav-link" href="/client/dropzone}}">Dropzones</a>
+            <a class="nav-link" href="/client/dropzone">Dropzones</a>
         </li>
         <li class="nav-item {% if active == 1 %}active {% endif %}">
-            <a class="nav-link" href="/client/load}}">Manifest</a>
+            <a class="nav-link" href="/client/load">Manifest</a>
         </li>
         <li class="nav-item {% if active == 2 %}active {% endif %}">
-            <a class="nav-link" href="/client/account}}">Account</a>
+            <a class="nav-link" href="/client/account">Account</a>
         </li>
         <li class="nav-item {% if active == 3 %}active {% endif %}">
-            <a class="nav-link" href="/client/config}}">Config</a>
+            <a class="nav-link" href="/client/config">Config</a>
         </li>
     </ul>
 {% endblock %}

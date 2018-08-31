@@ -10,7 +10,7 @@ Manage DZ Configurations
 
 {% block main %}
 <h1>Kiosk Configuration</h1>
-<form action="/kiosk/update" method="get">
+<form action="/kiosk/update" method="post">
     <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}"/>
     <div class="form-group row ">
         <label class="control-label requiredField col-4" for="cols">

@@ -118,7 +118,11 @@ class Load(ndb.Model):
                 time=(datetime.datetime.now() + time_increment).time(),
                 dropzone=dropzone_key
             )
-        return load
+        load.put()
+        ls.loads.append(load)
+        ls.load_struct = (ls.loads,ls.slot_mega)
+        ls.save()
+        return
 
 
 class Manifest(ndb.Model):
@@ -243,18 +247,19 @@ class LoadStructure:
 
     def __init__(self, dropzone_key):
         key = str(dropzone_key) + "ls"
-        self.load_struct = memcache.get(key)
+        ls = memcache.get(key)
         self.dropzone_key = dropzone_key
-        if self.load_struct is None :
-            self.load_struct = LoadStructure.refresh(dropzone_key)
-        self.loads = self.load_struct[0]
-        self.slot_mega = self.load_struct[1]
+        if ls is None :
+            self.refresh()
+        else:
+            self.load_struct = ls
+            self.loads = self.load_struct[0]
+            self.slot_mega = self.load_struct[1]
         return
 
     # refreshes the memcache from the permanent store
-    @classmethod
-    def refresh(cls,dropzone_key):
-        loads = Load.get_loads(dropzone_key).fetch()
+    def refresh(self):
+        loads = Load.get_loads(self.dropzone_key).fetch()
         manifests = Manifest.query().fetch()
         slot_mega = {}
         for load in loads:
@@ -263,10 +268,23 @@ class LoadStructure:
                 if manifest.load == load.key.id():
                     slots.append(Jumper.get_by_id(manifest.jumper))
             slot_mega.update({load.key.id(): slots})
-        load_struct = (loads, slot_mega)
-        key = str(dropzone_key) + "ls"
-        memcache.add(key,load_struct)
-        return load_struct
+        self.load_struct = (loads, slot_mega)
+        self.loads = self.load_struct[0]
+        self.slot_mega = self.load_struct[1]
+        self.save()
+        return
+
+    def save(self):
+        key = str(self.dropzone_key) + "ls"
+        client = memcache.Client()
+        while True:  # Retry loop
+            content = client.gets(key)
+            if content is None:
+                memcache.set(key, self.load_struct)
+                break
+            if client.cas(key, self.load_struct):
+                break
+        return
 
     #creates a dict showing the number of freeslots for each load in the LoadStructure
     def freeslots(self):
@@ -280,6 +298,7 @@ class LoadStructure:
 
     # retimes the load Structure using the preceded_by parameter
     def retime_chain(self):
+        dropzone=Dropzone.get_by_id(self.dropzone_key)
         flag = True
         if len(self.loads) !=0 :
             while flag:
@@ -288,12 +307,15 @@ class LoadStructure:
                 for next_load in self.loads:
                     if next_load.preceded_by == load.key.id():
                         if next_load.status in [WAITING, HOLD]:
-                            next_load.time = NextLoadTimeDz(load, self.dropzone_key)
+                            next_load.time = NextLoadTimeDz(load, dropzone)
                         load = next_load
                         load.put()
                         flag = True
                         break
+        self.refresh()
         return self
+
+
 
 
 class JumperStructure (type) :
@@ -339,14 +361,10 @@ def DeleteLoad(load, dropzone_key):
     load.key.delete()
     for manifest in manifests :
         manifest.key.delete()
-
     # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
-    loads = LoadStructure.refresh(dropzone_key)[0]
+    ls.refresh()
     # Retime all loads
-    if len(loads) != 0:
-        ls.retime_chain()
-    for manifest in manifests :
-        manifest.key.delete()
+    ls.retime_chain()
     return
 
 
@@ -358,7 +376,7 @@ def NextLoadTime(previous_load, time_increment):
 
 # Function to calculate NextLoadTime based upon DZ
 def NextLoadTimeDz(previous_load, dropzone):
-    return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.defaultloadtime))
+    return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.default_load_time))
 
 
 

@@ -15,6 +15,9 @@ handlers:
 - url: /bootstrap-datetimepicker
   static_dir: bootstrap-datetimepicker
 
+- url: /custom
+  static_dir: custom
+
 - url: .*
   script: jump.app
 

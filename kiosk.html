@@ -4,13 +4,17 @@ Jump Kiosk Page
 {% endblock %}
 
 {% block script %}
+{% include 'scripts.html' %}
 <meta http-equiv="refresh" content="10"/>
+
 <script type="text/javascript">
+
+    var slice={;{slice}}
 
     $.fn.infiniteScrollUp = function () {
         var self = this, kids = self.children();
-        if (kids.length > {{slice}})
-        {kids.slice({slice}}).hide();
+        if (kids.length > slice)
+        {kids.slice(slice).hide();
             setInterval(function () {
                 var show_this = kids.filter(':hidden').eq(0);
                 show_this.show();
@@ -18,14 +22,14 @@ Jump Kiosk Page
                 kids.eq(0).appendTo(self);
                 kids = self.children()
             }, 3000);
-    }
+        }
     return this;
-    }
-    {% for i in range(load_len) %}
+    };
+    //{% for i in range(load_len) %}
     $(function () {
         $('#scroll{{i}}').infiniteScrollUp()
     });
-    {% endfor %}
+    //{% endfor %}
 </script>
 {% endblock %}
 
@@ -35,10 +39,10 @@ Jump Kiosk Page
 {% block sidebar_exist %}
 {% endblock %}
 
-{% block main %}
-<div class="row">
+{% block main_exist %}
+
     {% for i in range(load_len) %}
-              <div class="col-3">
+              <div class="col-2">
                   {% set load = next_loads[i] %}
                   {% set slots = slot_mega[load.key.id()] %}
                   <div class="card">
@@ -87,5 +91,5 @@ Jump Kiosk Page
                   </div>
               </div>
     {% endfor %}
-</div>
+
 {% endblock %}

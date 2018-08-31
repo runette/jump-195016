@@ -40,18 +40,6 @@
       {% endblock %}
       </div>
       {% block navbar_right %}
-      {% set user = user_data['user'] %}
-      <ul class="nav navbar-nav navbar-right">
-          <li>
-              {% if user %}
-              <img class="img-thumbnail" src="
-                  https://www.googleapis.com/admin/directory/v1/users/{{user.email()}}/photos/thumbnail
-                  ">
-              {% endif %}
-              <a class="btn btn-primary" href="{{ user_data['url']|safe }}" role="button"> {{
-                  user_data['url_linktext']}}</a>
-          </li>
-      </ul>
       {% endblock %}
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
               aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,17 +53,19 @@
       <div class="container-fluid" style="margin-top:80px">
           <div class="row flex-xl-nowrap">
               {% block sidebar_exist %}
-              <div class="col-12 col-md-3 col-xl-2 bd-sidebar" data-spy="affix" data-offset-top="205">
+              <div class="col-3  bd-sidebar" data-spy="affix" data-offset-top="205">
                   <div class="list-group">
                       {% block sidebar %}{% endblock %}
                   </div>
               </div>
               {% endblock %}
-              <main class="col-12 m-0">
+              {% block main_exist %}
+              <main class="col-9 m-0">
                   {% block main %}{% endblock %}
               </main>
+              {% endblock %}
           </div>
       </div>
   </body>
-  {% include 'scripts.html' %} {% block script %} {% endblock %}
+  {% block script %} {% endblock %}
 </html>

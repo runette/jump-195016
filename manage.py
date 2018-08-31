@@ -58,10 +58,10 @@ class StartDay(webapp2.RequestHandler):
             #change status to open and add a default number of loads
             dropzone.status = OPEN
             Dropzone.put(dropzone)
-            if len(LoadStructure(dropzone_key).loads) is 0 :
+            ls = LoadStructure(dropzone_key)
+            if len(ls.loads) is 0 :
                 for i in range(dropzone.default_load_number):
-                    Load.add_load( dropzone_key).put()
-            LoadStructure.refresh(dropzone_key)
+                    Load.add_load( dropzone_key)
         elif dropzone.status == OPEN:
             message.update({'title': "Already Open"})
             message.update(({'body': "The dropzone is already open"}))
@@ -143,11 +143,9 @@ class ManageLoads(webapp2.RequestHandler):
                 load = Load.get_by_id(load_key)
                 load.status = FLYING
                 load.put()
-                LoadStructure.refresh(dropzone_key)
             if action == "add":
                 if dropzone_status == OPEN:
-                    Load.add_load(dropzone_key).put()
-                    LoadStructure.refresh(dropzone_key)
+                    Load.add_load(dropzone_key)
                 else:
                     message.update({'title': "Cannot Add"})
                     message.update(
@@ -156,17 +154,13 @@ class ManageLoads(webapp2.RequestHandler):
                 load = Load.get_by_id(load_key)
                 load.status = LANDED
                 load.put()
-                LoadStructure.refresh(dropzone_key)
             if action == "hold":
                 load = Load.get_by_id(load_key)
                 load.status = HOLD
-                load.put()
-                LoadStructure.refresh(dropzone_key)
             if action == "delete":
                 load = Load.get_by_id(load_key)
                 if load.status in [WAITING, HOLD]:
                     DeleteLoad(load, dropzone_key)
-                    LoadStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -228,7 +222,7 @@ class ManageManifest(webapp2.RequestHandler):
                                 jumper=jumper_key
                             )
                             manifest.put()
-                            LoadStructure.refresh(dropzone_key)
+                            load_struct.refresh()
                         else:
                             message.update({'title': "Not Current"})
                             message.update({'body': "Cannot Manifest a Jumper who is not Current"})
@@ -243,7 +237,7 @@ class ManageManifest(webapp2.RequestHandler):
             if action == "delete":
                 if load.status in [WAITING, HOLD]:
                     Manifest.delete_manifest(load_key, jumper_key)
-                    LoadStructure.refresh(dropzone_key)
+                    load_struct.refresh()
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -255,8 +249,8 @@ class ManageManifest(webapp2.RequestHandler):
                 {'body': "You do not have Manifest rights "})
 
         #Refresh the Manifests
-        LoadStructure.refresh(dropzone_key)
-        load_struct = LoadStructure(dropzone_key)
+
+
         slot_mega = load_struct.slot_mega
         slot_size = load_struct.freeslots()
         jumpers=JumperStructure.get(dropzone_key)

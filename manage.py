@@ -219,12 +219,7 @@ class ManageManifest(webapp2.RequestHandler):
                 if load.status in [WAITING, HOLD]:
                     if slot_size[load.key.id()] > 0:
                         if registration.current == CURRENT:
-                            manifest = Manifest(
-                                load=load_key,
-                                jumper=jumper_key
-                            )
-                            manifest.put()
-                            load_struct.refresh()
+                            load_struct.add_manifest(load_key,jumper_key)
                         else:
                             message.update({'title': "Not Current"})
                             message.update({'body': "Cannot Manifest a Jumper who is not Current"})

@@ -290,7 +290,6 @@ class LoadStructure:
         self.refresh()
         return self
 
-
     def add_load(self):
         dropzone = Dropzone.get_by_id(self.dropzone_key)
         loads = self.loads
@@ -333,7 +332,17 @@ class LoadStructure:
         # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
         self.refresh()
         # Retime all loads
+        return
 
+    def add_manifest(self,load_key, jumper_key):
+        manifest = Manifest(
+            load=load_key,
+            jumper=jumper_key
+        )
+        manifest.put()
+        slots = self.slot_mega[load_key]
+        slots.append(Jumper.get_by_id(manifest.jumper))
+        self.save()
         return
 
 

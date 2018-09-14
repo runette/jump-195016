@@ -94,35 +94,12 @@ class Load(ndb.Model):
     def get_loads (cls, dropzone_key) :
         return cls.query(Load.date == datetime.date.today(),Load.dropzone == dropzone_key).order(Load.number)
 
-    @classmethod
-    def add_load(cls, dropzone_key):
-        dropzone = Dropzone.get_by_id(dropzone_key)
-        ls = LoadStructure(dropzone_key)
-        loads = ls.loads
-        last = len(loads) - 1
-        time_increment = datetime.timedelta(minutes=dropzone.default_load_time)
-        if last >= 0:
-            load = Load(number=loads[last].number + 1,
-                        slots=dropzone.default_load_number,
-                        preceded_by=loads[last].key.id(),
-                        status=WAITING,
-                        time=NextLoadTimeDz(loads[last], dropzone),
-                        dropzone=dropzone_key
-                        )
-        else:
-            load = Load(
-                number=1,
-                slots=dropzone.default_load_number,
-                preceded_by=-1,
-                status=WAITING,
-                time=(datetime.datetime.now() + time_increment).time(),
-                dropzone=dropzone_key
-            )
-        load.put()
-        ls.loads.append(load)
-        ls.load_struct = (ls.loads,ls.slot_mega)
-        ls.save()
-        return
+    def put(self, **ctx_options):
+        ret = self._put( **ctx_options)
+        if self.has_complete_key():
+            ls = LoadStructure(self.dropzone)
+            ls.refresh()
+        return ret
 
 
 class Manifest(ndb.Model):
@@ -139,25 +116,11 @@ class Manifest(ndb.Model):
         return manifest[0].key.delete()
 
 
+
 class User(ndb.Model):
     name = ndb.StringProperty()
     dropzone = ndb.IntegerProperty()
     role = ndb.IntegerProperty()
-
-    @classmethod
-    def get_by_id(cls, id, parent=None, **ctx_options):
-        user = memcache.get(str(id))
-        if user is not None :
-            return user
-        else :
-            user = cls._get_by_id(id, parent, **ctx_options)
-            memcache.add(str(id),user)
-            return user
-
-    def put(self, **ctx_options):
-        self._put(**ctx_options)
-        memcache.delete(str(self.key.id()))
-
 
     @classmethod
     def get_user (cls, name) :
@@ -201,6 +164,19 @@ class Registration(ndb.Model) :
     def get_all_by_jumper(cls, jumper_key):
         return cls.query(Registration.jumper == jumper_key)
 
+    def put(self, **ctx_options):
+        ret = self._put( **ctx_options)
+        if self.has_complete_key():
+            js = JumperStructure(self.dropzone)
+            js.refresh()
+        return ret
+
+    def delete(self):
+        self.key.delete()
+        js = JumperStructure(self.dropzone)
+        js.refresh()
+        return
+
 
 class Sale(ndb.Model) :
     jumper = ndb.IntegerProperty()
@@ -236,7 +212,6 @@ class Jumper(ndb.Model):
     @classmethod
     def get_by_gid(cls, gid):
         return cls.query(Jumper.google_id == gid)
-
 
 # Creates a LoadStructure - loads and manifest - for dropzone for today using the copy in memcache if exists.
 class LoadStructure:
@@ -280,9 +255,9 @@ class LoadStructure:
         while True:  # Retry loop
             content = client.gets(key)
             if content is None:
-                memcache.set(key, self.load_struct)
+                memcache.set(key, self.load_struct,time=300)
                 break
-            if client.cas(key, self.load_struct):
+            if client.cas(key, self.load_struct, time=300):
                 break
         return
 
@@ -300,42 +275,101 @@ class LoadStructure:
     def retime_chain(self):
         dropzone=Dropzone.get_by_id(self.dropzone_key)
         flag = True
+        load = self.loads[0]
         if len(self.loads) !=0 :
             while flag:
                 flag = False
-                load = self.loads[0]
                 for next_load in self.loads:
                     if next_load.preceded_by == load.key.id():
                         if next_load.status in [WAITING, HOLD]:
                             next_load.time = NextLoadTimeDz(load, dropzone)
                         load = next_load
-                        load.put()
+                        load._put()
                         flag = True
                         break
         self.refresh()
         return self
 
 
+    def add_load(self):
+        dropzone = Dropzone.get_by_id(self.dropzone_key)
+        loads = self.loads
+        last = len(loads) - 1
+        time_increment = datetime.timedelta(minutes=dropzone.default_load_time)
+        if last >= 0:
+            load = Load(number=loads[last].number + 1,
+                        slots=dropzone.default_load_number,
+                        preceded_by=loads[last].key.id(),
+                        status=WAITING,
+                        time=NextLoadTimeDz(loads[last], dropzone),
+                        dropzone=self.dropzone_key
+                        )
+        else:
+            load = Load(
+                number=1,
+                slots=dropzone.default_load_number,
+                preceded_by=-1,
+                status=WAITING,
+                time=(datetime.datetime.now() + time_increment).time(),
+                dropzone=self.dropzone_key
+            )
+        load.put()
+        self.loads.append(load)
+        self.slot_mega.update({load.key.id(): []})
+        self.load_struct = (self.loads, self.slot_mega)
+        self.save()
+        return
+
+    # Deletes a load and all associated Manifests
+    def delete_load(self, load):
+        manifests = Manifest.get_by_load(load.key.id())
+        for next_load in self.loads:
+            if next_load.preceded_by == load.key.id():
+                next_load.preceded_by = load.preceded_by
+                next_load.put()
+        load.key.delete()
+        for manifest in manifests:
+            manifest.key.delete()
+        # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
+        self.refresh()
+        # Retime all loads
+
+        return
 
 
-class JumperStructure (type) :
-    @classmethod
-    def get(mcs, dropzone_key) :
+class JumperStructure () :
+    jumpers = []
+    dropzone_key=0
+
+    def __init__(self, dropzone_key) :
+        self.dropzone_key=dropzone_key
         jumpers = memcache.get(str(dropzone_key) + "js")
         if jumpers is not None :
-            return jumpers
+            self.jumpers =  jumpers
         else :
-            return JumperStructure.refresh(dropzone_key)
+            self.refresh()
+        return
 
-    @classmethod
-    def refresh(mcs, dropzone_key) :
-        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        jumpers = []
+    def refresh(self) :
+        registrations = Registration.get_by_dropzone(self.dropzone_key).fetch()
+        self.jumpers = []
         for registration in registrations:
             jumper_key = registration.jumper
-            jumpers.append((Jumper.get_by_id(jumper_key), registration))
-        memcache.add(str(dropzone_key) + "js",jumpers)
-        return jumpers
+            self.jumpers.append((Jumper.get_by_id(jumper_key), registration))
+        self.save()
+        return
+
+    def save(self):
+        key = str(self.dropzone_key) + "js"
+        client = memcache.Client()
+        while True:  # Retry loop
+            content = client.gets(key)
+            if content is None:
+                memcache.set(key, self.jumpers,time=300)
+                break
+            if client.cas(key, self.jumpers, time=300):
+                break
+        return
 
 
 def UserStatus (uri) :
@@ -350,22 +384,6 @@ def UserStatus (uri) :
     return {'user':user, 'url':url, 'url_linktext':url_linktext}
 
 
-# Deletes a load and all associated Manifests
-def DeleteLoad(load, dropzone_key):
-    ls = LoadStructure(dropzone_key)
-    manifests = Manifest.get_by_load(load.key.id())
-    for next_load in ls.loads:
-        if next_load.preceded_by == load.key.id():
-            next_load.preceded_by = load.preceded_by
-            next_load.put()
-    load.key.delete()
-    for manifest in manifests :
-        manifest.key.delete()
-    # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
-    ls.refresh()
-    # Retime all loads
-    ls.retime_chain()
-    return
 
 
 # FUNCTION that calculates the time object for a load based on the last load and the required interval - can also be used

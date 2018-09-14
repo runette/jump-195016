@@ -1,11 +1,11 @@
-{% extends "onelist.html" %}
+{% extends "client.html" %}
 
 {% block title %}
     Client Dz List
 {% endblock %}
 
 
-{% block mainline %}
+{% block main %}
     {% for dropzones in reg_mega %}
         {% set registration = dropzones[0] %}
         {% set dropzone = dropzones[1] %}
@@ -18,7 +18,7 @@
             <div class="col nowrap justify-content-right">
                 <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
             </div>
-            <a class="btn-primary" role="button" href="#">Details</a>
+            <a class="btn-primary" role="button" href="/client/manifest?dropzone={{dropzone.key.id()}}"> Enter </a>
         </div>
     {% endfor %}
 {% endblock %}

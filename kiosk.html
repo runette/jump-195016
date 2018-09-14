@@ -42,7 +42,7 @@ Jump Kiosk Page
 {% block main_exist %}
 
     {% for i in range(load_len) %}
-              <div class="col-2">
+              <div class="col">
                   {% set load = next_loads[i] %}
                   {% set slots = slot_mega[load.key.id()] %}
                   <div class="card">

@@ -33,11 +33,15 @@ class Client (webapp2.RequestHandler):
         # GET PARAMETERS
         user_data = UserStatus(self.request.uri)
         message = {}
+        reg_mega=[]
         if user_data:
             user = user_data['user']
             jumper = Jumper.get_by_gid(user.user_id()).get()
             if jumper:
-                a = 1
+                jumper = Jumper.get_by_gid(user.user_id()).get()
+                registrations = Registration.get_all_by_jumper(jumper.key.id())
+                for registration in registrations:
+                    reg_mega.append((registration, Dropzone.get_by_id(registration.dropzone)))
             else:
                 jumper = Jumper(
                     name=user.nickname(),
@@ -46,14 +50,16 @@ class Client (webapp2.RequestHandler):
                 )
                 jumper.put()
         else:
-            jumper = ""
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
         template_values = {
             'user_data': user_data,
             'message': message,
+            'reg_mega': reg_mega,
+            'registration_status': REGISTRATION_STATUS,
+            'registration_colours': REGISTRATION_COLOURS,
         }
-        template = JINJA_ENVIRONMENT.get_template('client.html')
+        template = JINJA_ENVIRONMENT.get_template('clientdz.html')
         self.response.write(template.render(template_values))
 
 
@@ -65,8 +71,7 @@ class ClientConfig (webapp2.RequestHandler) :
         action = self.request.get('action')
         if user_data :
             user = user_data['user']
-            jumper_key = Jumper.get_by_gid(user.user_id())
-            jumper=Jumper.get_by_id(jumper_key)
+            jumper = Jumper.get_by_gid(user.user_id()).get()
             if action == "update" :
                 # if jumper.google_id == user.user_id :
                     jumper.name = self.request.get('name')
@@ -85,13 +90,15 @@ class ClientConfig (webapp2.RequestHandler) :
         template = JINJA_ENVIRONMENT.get_template('clientconfig.html')
         self.response.write(template.render(template_values))
 
-class ClientDz(webapp2.RequestHandler) :
+
+class ClientManifest(webapp2.RequestHandler) :
     def get(self):
         user_data = UserStatus(self.request.uri)
         message = {}
         if user_data:
-            jumper_key = int(self.request.get('jumper',"0"))
-            registrations = Registration.get_all_by_jumper(jumper_key)
+            user = user_data['user']
+            jumper = Jumper.get_by_gid(user.user_id()).get()
+            registrations = Registration.get_all_by_jumper(jumper.key.id())
             reg_mega = []
             for registration in registrations :
                 reg_mega.append((registration,Dropzone.get_by_id(registration.dropzone)))
@@ -107,5 +114,4 @@ class ClientDz(webapp2.RequestHandler) :
         }
         template = JINJA_ENVIRONMENT.get_template('clientdz.html')
         self.response.write(template.render(template_values))
-
 

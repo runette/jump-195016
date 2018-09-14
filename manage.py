@@ -61,7 +61,7 @@ class StartDay(webapp2.RequestHandler):
             ls = LoadStructure(dropzone_key)
             if len(ls.loads) is 0 :
                 for i in range(dropzone.default_load_number):
-                    Load.add_load( dropzone_key)
+                    ls.add_load()
         elif dropzone.status == OPEN:
             message.update({'title': "Already Open"})
             message.update(({'body': "The dropzone is already open"}))
@@ -96,7 +96,8 @@ class EndDay(webapp2.RequestHandler):
             loads = []
         for load in loads:
             if load.status in [WAITING, HOLD]:
-                DeleteLoad(load, dropzone_key)
+                ls=LoadStructure(dropzone_key)
+                ls.delete_load(load)
         Dropzone.put(dropzone)
         template_values = {
             'user_data': user_data,
@@ -137,6 +138,7 @@ class ManageLoads(webapp2.RequestHandler):
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
         dropzone_status = dropzone.status
+        load_struct = LoadStructure(dropzone_key)
         # Set the Load Details
         if user.role in [ADMIN, MANIFEST]:
             if action == "takeoff":
@@ -145,7 +147,7 @@ class ManageLoads(webapp2.RequestHandler):
                 load.put()
             if action == "add":
                 if dropzone_status == OPEN:
-                    Load.add_load(dropzone_key)
+                    load_struct.add_load()
                 else:
                     message.update({'title': "Cannot Add"})
                     message.update(
@@ -160,7 +162,8 @@ class ManageLoads(webapp2.RequestHandler):
             if action == "delete":
                 load = Load.get_by_id(load_key)
                 if load.status in [WAITING, HOLD]:
-                    DeleteLoad(load, dropzone_key)
+                    load_struct.delete_load(load)
+                    load_struct.retime_chain()
                 else:
                     message.update({'title': "Cannot Delete"})
                     message.update(
@@ -172,7 +175,6 @@ class ManageLoads(webapp2.RequestHandler):
                 {'body': "You do not have Manifest rights "})
 
         # refresh loads
-        load_struct = LoadStructure(dropzone_key)
         loads = load_struct.loads
         slot_mega = load_struct.slot_mega
         template_values = {
@@ -253,14 +255,14 @@ class ManageManifest(webapp2.RequestHandler):
 
         slot_mega = load_struct.slot_mega
         slot_size = load_struct.freeslots()
-        jumpers=JumperStructure.get(dropzone_key)
+        js=JumperStructure(dropzone_key)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'load': load,
             'slot_mega': slot_mega,
             'slotsize': slot_size,
-            'jumpers': jumpers,
+            'jumpers': js.jumpers,
             'message': message,
             'active': 1,
             'dropzone_status': DROPZONE_STATUS,
@@ -302,7 +304,6 @@ class ManageJumpers(webapp2.RequestHandler):
                             current=NOT_CURRENT
                         )
                         registration.put()
-                        JumperStructure.refresh(dropzone_key)
                 else:
                     message.update({'title': "Invalid Jumper"})
                     message.update(
@@ -311,8 +312,7 @@ class ManageJumpers(webapp2.RequestHandler):
             if delete == "yes":
                 registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
                 if registration.current == NOT_CURRENT:
-                    registration.key.delete()
-                    JumperStructure.refresh(dropzone_key)
+                    registration.delete()
                 else:
                     message.update({'title': "Current Jumper"})
                     message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
@@ -323,7 +323,6 @@ class ManageJumpers(webapp2.RequestHandler):
                 registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
                 registration.current = int(self.request.get('current', "1"))
                 registration.put()
-                JumperStructure.refresh(dropzone_key)
         else:
             message.update({'title': "Cannot Registration"})
             message.update(
@@ -331,12 +330,12 @@ class ManageJumpers(webapp2.RequestHandler):
 
         # refresh registrations
         registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        jumpers = JumperStructure.get(dropzone_key)
+        js = JumperStructure(dropzone_key)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'registration': registrations,
-            'jumpers': jumpers,
+            'jumpers': js.jumpers,
             'message': message,
             'active': 3,
             'dropzone_status': DROPZONE_STATUS,
@@ -422,15 +421,12 @@ class UpdateUser(webapp2.RequestHandler):
             if action == "add":
                 name = self.request.get('user_email') + "@gmail.com"
                 user_update = User.get_user(name)
-                if user_update:
-                    a = 1
-                else:
-                    user_update = User(
+                user_update = User(
                         name=name,
                         dropzone=dropzone_key,
                         role=VIEW
                     )
-                    user_update.put()
+                user_update.put()
             if action == "delete":
                 user_update = User.get_by_id(user_key)
                 if user_update:

@@ -41,8 +41,7 @@ class MainPage(webapp2.RequestHandler):
             dropzone_key = User.get_user(user.email()).dropzone
             dropzone = Dropzone.get_by_id(dropzone_key)
         else:
-            dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
-        dropzone_status = dropzone.status
+            dropzone = DEFAULT_DROPZONE
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -136,61 +135,69 @@ class ManageSales(webapp2.RequestHandler):
 class ManageLoads(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        # GET PARAMETERS
-        load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
-        action = self.request.get('action')
-        message = {}
-        user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
-        # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
-        dropzone_status = dropzone.status
-        load_struct = LoadStructure(dropzone_key)
-        # Set the Load Details
-        if user.role in [ADMIN, MANIFEST]:
-            if action == "takeoff":
-                load_struct.set_status(load_key, FLYING)
-            if action == "add":
-                if dropzone_status == OPEN:
-                    load_struct.add_load()
-                else:
-                    message.update({'title': "Cannot Add"})
-                    message.update(
-                        {'body': dropzone.name + " is currently closed so new loads cannot be added "})
-            if action == "landed":
-                load_struct.set_status(load_key, LANDED)
-            if action == "hold":
-                load_struct.set_status(load_key, HOLD)
-            if action == "delete":
-                load = Load.get_by_id(load_key)
-                if load.status in [WAITING, HOLD]:
-                    load_struct.delete_load(load)
-                    load_struct.retime_chain()
-                else:
-                    message.update({'title': "Cannot Delete"})
-                    message.update(
-                        {'body': "Cannot delete loads that have taken off - use end of day function "})
+        if user_data['user']:
+            # GET PARAMETERS
+            load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
+            action = self.request.get('action')
+            message = {}
+            user = User.get_user(user_data['user'].email())
+            # Set the Dropone details
+            dropzone_status = dropzone.status
+            load_struct = LoadStructure(dropzone_key)
+            # Set the Load Details
+            if user.role in [ADMIN, MANIFEST]:
+                if action == "takeoff":
+                    load_struct.set_status(load_key, FLYING)
+                if action == "add":
+                    if dropzone_status == OPEN:
+                        load_struct.add_load()
+                    else:
+                        message.update({'title': "Cannot Add"})
+                        message.update(
+                            {'body': dropzone.name + " is currently closed so new loads cannot be added "})
+                if action == "landed":
+                    load_struct.set_status(load_key, LANDED)
+                if action == "hold":
+                    load_struct.set_status(load_key, HOLD)
+                if action == "delete":
+                    load = Load.get_by_id(load_key)
+                    if load.status in [WAITING, HOLD]:
+                        load_struct.delete_load(load)
+                        load_struct.retime_chain()
+                    else:
+                        message.update({'title': "Cannot Delete"})
+                        message.update(
+                            {'body': "Cannot delete loads that have taken off - use end of day function "})
 
+            else:
+                message.update({'title': "Cannot Manifest"})
+                message.update(
+                    {'body': "You do not have Manifest rights "})
+
+            # refresh loads
+            loads = load_struct.loads
+            slot_mega = load_struct.slot_mega
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'loads': loads,
+                'slot_mega': slot_mega,
+                'message': message,
+                'slotsize': load_struct.freeslots(),
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'load_status': LOAD_STATUS,
+                'load_colours': LOAD_COLOURS
+            }
         else:
-            message.update({'title': "Cannot Manifest"})
-            message.update(
-                {'body': "You do not have Manifest rights "})
-
-        # refresh loads
-        loads = load_struct.loads
-        slot_mega = load_struct.slot_mega
-        template_values = {
-            'user_data': user_data,
-            'dropzone': dropzone,
-            'loads': loads,
-            'slot_mega': slot_mega,
-            'message': message,
-            'slotsize': load_struct.freeslots(),
-            'active': 1,
-            'dropzone_status': DROPZONE_STATUS,
-            'load_status': LOAD_STATUS,
-            'load_colours': LOAD_COLOURS
-        }
+            template_values = {
+                'user_data': user_data,
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'dropzone' : DEFAULT_DROPZONE,
+            }
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
 
@@ -199,45 +206,53 @@ class ManageLoads(webapp2.RequestHandler):
 class ManageManifest(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        # GET PARAMETERS
-        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
-        load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
-        action = self.request.get('action')
-        jumper_key = int(self.request.get('jumper', "0"))
-        message = {}
-        user = User.get_user(user_data['user'].email())
-        # Set the Dropone details
-        dropzone = Dropzone.get_by_id(dropzone_key)
-        registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
-        # Set the Load Details
-        load = Load.get_by_id(load_key)
-        load_struct = LoadStructure(dropzone_key)
-        if user.role in [ADMIN, MANIFEST]:
-            message = load_struct.manifest_action(action,load, registration)
+        if user_data['user']:
+            # GET PARAMETERS
+            dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
+            load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
+            action = self.request.get('action')
+            jumper_key = int(self.request.get('jumper', "0"))
+            message = {}
+            user = User.get_user(user_data['user'].email())
+            # Set the Dropone details
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
+            # Set the Load Details
+            load = Load.get_by_id(load_key)
+            load_struct = LoadStructure(dropzone_key)
+            if user.role in [ADMIN, MANIFEST]:
+                message = load_struct.manifest_action(action,load, registration)
+            else:
+                message.update({'title': "Cannot Manifest"})
+                message.update(
+                    {'body': "You do not have Manifest rights "})
+
+            #Refresh the Manifests
+
+
+            slot_mega = load_struct.slot_mega
+            slot_size = load_struct.freeslots()
+            js=JumperStructure(dropzone_key)
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'load': load,
+                'slot_mega': slot_mega,
+                'slotsize': slot_size,
+                'jumpers': js.jumpers,
+                'message': message,
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'load_status': LOAD_STATUS,
+                'load_colours': LOAD_COLOURS
+            }
         else:
-            message.update({'title': "Cannot Manifest"})
-            message.update(
-                {'body': "You do not have Manifest rights "})
-
-        #Refresh the Manifests
-
-
-        slot_mega = load_struct.slot_mega
-        slot_size = load_struct.freeslots()
-        js=JumperStructure(dropzone_key)
-        template_values = {
-            'user_data': user_data,
-            'dropzone': dropzone,
-            'load': load,
-            'slot_mega': slot_mega,
-            'slotsize': slot_size,
-            'jumpers': js.jumpers,
-            'message': message,
-            'active': 1,
-            'dropzone_status': DROPZONE_STATUS,
-            'load_status': LOAD_STATUS,
-            'load_colours': LOAD_COLOURS
-        }
+            template_values = {
+                'user_data': user_data,
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'dropzone': DEFAULT_DROPZONE,
+            }
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render(template_values))
 
@@ -245,63 +260,71 @@ class ManageManifest(webapp2.RequestHandler):
 class ManageJumpers(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        # GET PARAMETERS
-        jumper_key = int(self.request.get('jumper', "0"))
-        action = self.request.get('action')
-        delete = self.request.get('delete')
-        message = {}
-        user = User.get_user(user_data['user'].email())
-        dropzone_key = int(self.request.get('dropzone'))
-        dropzone = Dropzone.get_by_id(dropzone_key)
-        js = JumperStructure(dropzone_key)
-        if user.role in [ADMIN, SALES]:
-            if action == "add":
-                jumper_email = self.request.get('email') + "@gmail.com"
-                jumper = Jumper.get_by_email(jumper_email).fetch()
-                if jumper:
-                    jumper_key = jumper[0].key.id()
-                    registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
-                    if registration:
-                        message.update({'title': "Double Registration"})
-                        message.update({'body': " Cannot register a jumper twice"})
+        if user_data['user']:
+            # GET PARAMETERS
+            jumper_key = int(self.request.get('jumper', "0"))
+            action = self.request.get('action')
+            delete = self.request.get('delete')
+            message = {}
+            user = User.get_user(user_data['user'].email())
+            dropzone_key = int(self.request.get('dropzone'))
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            js = JumperStructure(dropzone_key)
+            if user.role in [ADMIN, SALES]:
+                if action == "add":
+                    jumper_email = self.request.get('email') + "@gmail.com"
+                    jumper = Jumper.get_by_email(jumper_email).fetch()
+                    if jumper:
+                        jumper_key = jumper[0].key.id()
+                        registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
+                        if registration:
+                            message.update({'title': "Double Registration"})
+                            message.update({'body': " Cannot register a jumper twice"})
+                        else:
+                            js.add(jumper_key)
                     else:
-                        js.add(jumper_key)
-                else:
-                    message.update({'title': "Invalid Jumper"})
-                    message.update(
-                        {'body': "No Jumper registered with this email"})
+                        message.update({'title': "Invalid Jumper"})
+                        message.update(
+                            {'body': "No Jumper registered with this email"})
 
-            if delete == "yes":
-                registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
-                if registration.current == NOT_CURRENT:
-                    js.delete(jumper_key)
-                else:
-                    message.update({'title': "Current Jumper"})
-                    message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
+                if delete == "yes":
+                    registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
+                    if registration.current == NOT_CURRENT:
+                        js.delete(jumper_key)
+                    else:
+                        message.update({'title': "Current Jumper"})
+                        message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
 
-            elif action == "update":
-                js.update(jumper_key,
-                          datetime.datetime.strptime(self.request.get('waiver'),"%d/%m/%y"),
-                          datetime.datetime.strptime(self.request.get('reserve'),"%d/%m/%y"),
-                          int(self.request.get('current', "1")))
+                elif action == "update":
+                    js.update(jumper_key,
+                              datetime.datetime.strptime(self.request.get('waiver'),"%d/%m/%y"),
+                              datetime.datetime.strptime(self.request.get('reserve'),"%d/%m/%y"),
+                              int(self.request.get('current', "1")))
+            else:
+                message.update({'title': "Cannot Registration"})
+                message.update(
+                    {'body': "You do not have Registration rights "})
+
+            # refresh registrations
+            registrations = Registration.get_by_dropzone(dropzone_key).fetch()
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'registration': registrations,
+                'jumpers': js.jumpers,
+                'message': message,
+                'active': 3,
+                'dropzone_status': DROPZONE_STATUS,
+                'registration_status': REGISTRATION_STATUS,
+                'registration_colours': REGISTRATION_COLOURS
+            }
         else:
-            message.update({'title': "Cannot Registration"})
-            message.update(
-                {'body': "You do not have Registration rights "})
-
-        # refresh registrations
-        registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        template_values = {
-            'user_data': user_data,
-            'dropzone': dropzone,
-            'registration': registrations,
-            'jumpers': js.jumpers,
-            'message': message,
-            'active': 3,
-            'dropzone_status': DROPZONE_STATUS,
-            'registration_status': REGISTRATION_STATUS,
-            'registration_colours': REGISTRATION_COLOURS
-        }
+            template_values = {
+                'user_data': user_data,
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'dropzone': DEFAULT_DROPZONE,
+            }
         template = JINJA_ENVIRONMENT.get_template('jumpers.html')
         self.response.write(template.render(template_values))
 
@@ -309,39 +332,48 @@ class ManageJumpers(webapp2.RequestHandler):
 class ManageDz(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-        user = User.get_user(user_data['user'].email())
-        message = {}
-        if user.role == ADMIN:
-            # Get the dropzone details based on the user
-            dropzone_key = int(self.request.get('dropzone'))
-            dropzone = Dropzone.get_by_id(dropzone_key)
-        else:
-            dropzone_key = DEFAULT_DROPZONE_ID
-            dropzone = Dropzone.get_by_id(dropzone_key)
-            message.update({'title': "Not Administrator"})
-            message.update({'body': "You do not have administrator rights"})
-        action = self.request.get('action')
-        if action == "user":
-            response = "configureuser.html"
-        elif action == "sales":
-            response = "configuresales.html"
-        elif action == "kiosk":
-            response = "configurekiosk.html"
-        else:
-            response = "configuredz.html"
-        template_values = {
-            'user_data': user_data,
-            'dropzone': dropzone,
-            'users': User.get_by_dropzone(dropzone_key).fetch(),
-            'message': message,
-            'user_roles': USER_ROLES,
-            'role_colours': ROLE_COLOURS,
-            'active': 4,
-            'dropzone_status': DROPZONE_STATUS,
-            'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch(),
-            'request' : self.request.application_url,
+        if user_data['user']:
+            user = User.get_user(user_data['user'].email())
+            message = {}
+            if user.role == ADMIN:
+                # Get the dropzone details based on the user
+                dropzone_key = int(self.request.get('dropzone'))
+                dropzone = Dropzone.get_by_id(dropzone_key)
+            else:
+                dropzone_key = DEFAULT_DROPZONE_ID
+                dropzone = Dropzone.get_by_id(dropzone_key)
+                message.update({'title': "Not Administrator"})
+                message.update({'body': "You do not have administrator rights"})
+            action = self.request.get('action')
+            if action == "user":
+                response = "configureuser.html"
+            elif action == "sales":
+                response = "configuresales.html"
+            elif action == "kiosk":
+                response = "configurekiosk.html"
+            else:
+                response = "configuredz.html"
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'users': User.get_by_dropzone(dropzone_key).fetch(),
+                'message': message,
+                'user_roles': USER_ROLES,
+                'role_colours': ROLE_COLOURS,
+                'active': 4,
+                'dropzone_status': DROPZONE_STATUS,
+                'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch(),
+                'request' : self.request.application_url,
 
-        }
+            }
+        else:
+            template_values = {
+                'user_data': user_data,
+                'active': 1,
+                'dropzone_status': DROPZONE_STATUS,
+                'dropzone': DEFAULT_DROPZONE,
+            }
+            response = "index.html"
         template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))
 

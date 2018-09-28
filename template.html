@@ -52,17 +52,8 @@
 
       <div class="container-fluid" style="margin-top:80px">
           <div class="row flex-xl-nowrap">
-              {% block sidebar_exist %}
-              <div class="col-3  bd-sidebar" data-spy="affix" data-offset-top="205">
-                  <div class="list-group">
-                      {% block sidebar %}{% endblock %}
-                  </div>
-              </div>
-              {% endblock %}
               {% block main_exist %}
-              <main class="col-9 m-0">
-                  {% block main %}{% endblock %}
-              </main>
+
               {% endblock %}
           </div>
       </div>

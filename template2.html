@@ -1,7 +1,7 @@
 {% extends "template.html" %}
-
+{% set user = user_data['user'] %}
 {% block navbar_right %}
-      {% set user = user_data['user'] %}
+
       <ul class="nav navbar-nav navbar-right">
           <li class="nav-item m-1">
                   <a class="btn btn-primary p-1"  href="{{ user_data['url']|safe }}" role="button"> {% if user %}  <img class="m-0 p-0" id="thumbnail" height="30" width="30" src=""> {% endif %}{{ user_data['url_linktext']}}</a>
@@ -19,3 +19,20 @@
         })
     </script>
 {% endblock %}
+
+
+{% block main_exist %}
+    {% if user %}
+    {% block sidebar_exist %}
+        <div class="col-3  bd-sidebar" data-spy="affix" data-offset-top="205">
+            <div class="list-group">
+                {% block sidebar %}{% endblock %}
+            </div>
+        </div>
+    {% endblock %}
+    <main class="col-9 m-0">
+        {% block main %}{% endblock %}
+    </main>
+    {% endif %}
+{% endblock %}
+

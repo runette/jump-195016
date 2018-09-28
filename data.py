@@ -9,12 +9,13 @@ import jinja2
 
 # START Global variables
 
-DEFAULT_DROPZONE_NAME = "No Dropzone"  # deprecated
-DEFAULT_DROPZONE_ID = 0
-DEFAULT_DROPZONE_STATUS = "No Status"  # deprecated
+
 DROPZONE_STATUS = ["Open", "Closed"]
 OPEN = 0
 CLOSED = 1
+DEFAULT_DROPZONE_NAME = "No Dropzone"
+DEFAULT_DROPZONE_ID = 0
+DEFAULT_DROPZONE_STATUS = CLOSED
 LOAD_STATUS = ["Waiting","In the air", "On hold", "Landed"] # - waiting, flying, hold, landed
 LOAD_COLOURS = [("bg-primary", "text-white"), ("bg-success", "text-white"), ("bg-warning", "text-white"),
                 ("bg-secondary", "text-white")]
@@ -40,6 +41,12 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
+DEFAULT_DROPZONE = {
+    'name': DEFAULT_DROPZONE_NAME,
+    'status': -1,
+    'key': {'id':DEFAULT_DROPZONE_ID}
+}
 
 # [END Global variables]
 

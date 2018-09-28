@@ -1,6 +1,20 @@
 {% extends "template2.html" %}
+{% set user = user_data['user'] %}
 {% block title %}
 Jump Client
+{% endblock %}
+
+{% block script %}
+{% include 'scripts.html' %}
+{% if user %}
+
+{% endif %}
+<script type="text/javascript">
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+            google_init()
+        })
+    </script>
 {% endblock %}
 
 {% block navbar_left %}
@@ -21,5 +35,14 @@ Jump Client
 {% endblock %}
 
 {% block sidebar_exist %}
+{% endblock %}
+
+{% block main_exist %}
+{% if user %}
+<main class="col">
+                  {% block main %}{% endblock %}
+              </main>
+
+{% endif %}
 {% endblock %}
 

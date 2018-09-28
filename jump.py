@@ -27,6 +27,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route ('/client/manifest', handler=ClientManifest),
     webapp2.Route ('/client/account', handler=Client),
     webapp2.Route ('/client/config', handler=ClientConfig),
+    webapp2.Route ('/client/load', handler=ClientLoads),
 
 ], debug=True)
 

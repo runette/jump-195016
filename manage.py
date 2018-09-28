@@ -27,9 +27,15 @@ from data import *
 # MainPage handles the index page
 class MainPage(webapp2.RequestHandler):
     def get(self):
+        if self.request.referer:
+            if "client" in self.request.referer:
+                self.redirect('/client')
+                return
+            if "kiosk" in self.request.referer and "configdz" not in self.request.referer:
+                self.redirect(self.request.referer)
+                return
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
-
         if user:
             # Get the dropzone details based on the user
             dropzone_key = User.get_user(user.email()).dropzone
@@ -45,6 +51,7 @@ class MainPage(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
+        return
 
 #Handles Start of Day actions and returns to the index page
 class StartDay(webapp2.RequestHandler):
@@ -142,9 +149,7 @@ class ManageLoads(webapp2.RequestHandler):
         # Set the Load Details
         if user.role in [ADMIN, MANIFEST]:
             if action == "takeoff":
-                load = Load.get_by_id(load_key)
-                load.status = FLYING
-                load.put()
+                load_struct.set_status(load_key, FLYING)
             if action == "add":
                 if dropzone_status == OPEN:
                     load_struct.add_load()
@@ -153,12 +158,9 @@ class ManageLoads(webapp2.RequestHandler):
                     message.update(
                         {'body': dropzone.name + " is currently closed so new loads cannot be added "})
             if action == "landed":
-                load = Load.get_by_id(load_key)
-                load.status = LANDED
-                load.put()
+                load_struct.set_status(load_key, LANDED)
             if action == "hold":
-                load = Load.get_by_id(load_key)
-                load.status = HOLD
+                load_struct.set_status(load_key, HOLD)
             if action == "delete":
                 load = Load.get_by_id(load_key)
                 if load.status in [WAITING, HOLD]:
@@ -206,40 +208,12 @@ class ManageManifest(webapp2.RequestHandler):
         user = User.get_user(user_data['user'].email())
         # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
-        registrations = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()
-        if registrations:
-            registration = registrations[0]
-
+        registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
         # Set the Load Details
         load = Load.get_by_id(load_key)
         load_struct = LoadStructure(dropzone_key)
-        slot_size = load_struct.freeslots()
         if user.role in [ADMIN, MANIFEST]:
-            if action == "add":
-                if load.status in [WAITING, HOLD]:
-                    if slot_size[load.key.id()] > 0:
-                        if registration.current == CURRENT:
-                            load_struct.add_manifest(load_key,jumper_key)
-                        else:
-                            message.update({'title': "Not Current"})
-                            message.update({'body': "Cannot Manifest a Jumper who is not Current"})
-                    else:
-                        message.update({'title': "No Slots"})
-                        message.update({'body': "You cannot manifest on this load - there are no slots left"})
-                else:
-                    message.update({'title': "Cannot Add"})
-                    message.update(
-                        {'body': "This Load is not Open for Manifest. The Load status is \" " + LOAD_STATUS[
-                            load.status] + "\""})
-            if action == "delete":
-                if load.status in [WAITING, HOLD]:
-                    Manifest.delete_manifest(load_key, jumper_key)
-                    load_struct.refresh()
-                else:
-                    message.update({'title': "Cannot Delete"})
-                    message.update(
-                        {'body': "Cannot delete loads that have taken off - use end of day function "})
-
+            message = load_struct.manifest_action(action,load, registration)
         else:
             message.update({'title': "Cannot Manifest"})
             message.update(
@@ -279,7 +253,7 @@ class ManageJumpers(webapp2.RequestHandler):
         user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
         dropzone = Dropzone.get_by_id(dropzone_key)
-
+        js = JumperStructure(dropzone_key)
         if user.role in [ADMIN, SALES]:
             if action == "add":
                 jumper_email = self.request.get('email') + "@gmail.com"
@@ -291,33 +265,25 @@ class ManageJumpers(webapp2.RequestHandler):
                         message.update({'title': "Double Registration"})
                         message.update({'body': " Cannot register a jumper twice"})
                     else:
-                        registration = Registration(
-                            jumper=jumper_key,
-                            dropzone=dropzone_key,
-                            waiver=datetime.date.today(),
-                            reserve=datetime.date.today(),
-                            current=NOT_CURRENT
-                        )
-                        registration.put()
+                        js.add(jumper_key)
                 else:
                     message.update({'title': "Invalid Jumper"})
                     message.update(
                         {'body': "No Jumper registered with this email"})
 
             if delete == "yes":
-                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
+                registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
                 if registration.current == NOT_CURRENT:
-                    registration.delete()
+                    js.delete(jumper_key)
                 else:
                     message.update({'title': "Current Jumper"})
                     message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
 
             elif action == "update":
-                registration = Registration.get_by_jumper(dropzone_key, jumper_key).fetch()[0]
-                registration.waiver = datetime.datetime.strptime(self.request.get('waiver'), "%d/%m/%y")
-                registration.reserve = datetime.datetime.strptime(self.request.get('reserve'), "%d/%m/%y")
-                registration.current = int(self.request.get('current', "1"))
-                registration.put()
+                js.update(jumper_key,
+                          datetime.datetime.strptime(self.request.get('waiver'),"%d/%m/%y"),
+                          datetime.datetime.strptime(self.request.get('reserve'),"%d/%m/%y"),
+                          int(self.request.get('current', "1")))
         else:
             message.update({'title': "Cannot Registration"})
             message.update(
@@ -325,7 +291,6 @@ class ManageJumpers(webapp2.RequestHandler):
 
         # refresh registrations
         registrations = Registration.get_by_dropzone(dropzone_key).fetch()
-        js = JumperStructure(dropzone_key)
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
@@ -467,21 +432,15 @@ class RetimeLoads(webapp2.RequestHandler):
         load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
         action = self.request.get('action')
         dropzone_key = int(self.request.get('dropzone'))
-        # Set the Dropone details
         dropzone = Dropzone.get_by_id(dropzone_key)
         if user.role in [ADMIN, MANIFEST]:
-            # Set the Dropone details
-            load = Load.get_by_id(load_key)
-            if action == "5":
-                load.time = NextLoadTime(load, datetime.timedelta(minutes=5))
-                load.put()
-            if action == "10":
-                load.time = NextLoadTime(load, datetime.timedelta(minutes=10))
-                load.put()
-            if action == "select":
-                load.time = NextLoadTime(load, datetime.timedelta(minutes=0))
             load_struct = LoadStructure(dropzone_key)
-            load_struct.retime_chain()
+            if action == "5":
+                load_struct.retime_load(load_key, 5)
+            if action == "10":
+                load_struct.retime_load(load_key, 10)
+            if action == "select":
+                load_struct.retime_load(load_key, 0)
 
         else:
             message.update({'title': "Cannot Manifest"})

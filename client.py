@@ -32,32 +32,23 @@ class Client (webapp2.RequestHandler):
     def get(self):
         # GET PARAMETERS
         user_data = UserStatus(self.request.uri)
+        user = user_data['user']
         message = {}
-        reg_mega=[]
-        if user_data:
-            user = user_data['user']
-            jumper = Jumper.get_by_gid(user.user_id()).get()
-            if jumper:
-                jumper = Jumper.get_by_gid(user.user_id()).get()
-                registrations = Registration.get_all_by_jumper(jumper.key.id())
-                for registration in registrations:
-                    reg_mega.append((registration, Dropzone.get_by_id(registration.dropzone)))
-            else:
-                jumper = Jumper(
-                    name=user.nickname(),
-                    email=user.email(),
-                    google_id=user.user_id(),
-                )
-                jumper.put()
+        if user:
+            rm = RegMega(user)
+            reg_mega = rm.reg_mega
         else:
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
+            reg_mega = {}
         template_values = {
             'user_data': user_data,
             'message': message,
             'reg_mega': reg_mega,
             'registration_status': REGISTRATION_STATUS,
             'registration_colours': REGISTRATION_COLOURS,
+            'dropzone_status': DROPZONE_STATUS,
+
         }
         template = JINJA_ENVIRONMENT.get_template('clientdz.html')
         self.response.write(template.render(template_values))
@@ -69,8 +60,8 @@ class ClientConfig (webapp2.RequestHandler) :
         user_data = UserStatus(self.request.uri)
         message = {}
         action = self.request.get('action')
-        if user_data :
-            user = user_data['user']
+        user = user_data['user']
+        if user:
             jumper = Jumper.get_by_gid(user.user_id()).get()
             if action == "update" :
                 # if jumper.google_id == user.user_id :
@@ -95,23 +86,86 @@ class ClientManifest(webapp2.RequestHandler) :
     def get(self):
         user_data = UserStatus(self.request.uri)
         message = {}
-        if user_data:
-            user = user_data['user']
-            jumper = Jumper.get_by_gid(user.user_id()).get()
-            registrations = Registration.get_all_by_jumper(jumper.key.id())
-            reg_mega = []
-            for registration in registrations :
-                reg_mega.append((registration,Dropzone.get_by_id(registration.dropzone)))
-        else :
+        dropzone_key = int(self.request.get("dropzone"))
+        user = user_data['user']
+        if user:
+            rm = RegMega(user)
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            registration = Registration.get_by_jumper(dropzone_key,rm.jumper).get()
+            load_struct = LoadStructure(dropzone_key)
+            jumper = Jumper.get_by_id(rm.jumper)
+            slots = []
+            for load in load_struct.loads:
+                if jumper in load_struct.slot_mega[load.key.id()]:
+                    slots.append(load.key.id())
+            template_values = {
+                'user_data': user_data,
+                'message' : message,
+                'dropzone': dropzone,
+                'registration':registration,
+                'registration_status' : REGISTRATION_STATUS,
+                'registration_colours' : REGISTRATION_COLOURS,
+                'dropzone_status': DROPZONE_STATUS,
+                'loads': load_struct.loads,
+                'slots' : slots,
+                'load_colours': LOAD_COLOURS,
+                'load_status': LOAD_STATUS,
+                'slotsize': load_struct.freeslots(),
+            }
+        else:
+            message.update({'title': "Not logged in"})
+            message.update({'body': "You are not logged in"})
+            template_values = {
+                'user_data': user_data,
+                'message' : message,
+            }
+        template = JINJA_ENVIRONMENT.get_template('clientmanifest.html')
+        self.response.write(template.render(template_values))
+
+class ClientLoads(webapp2.RequestHandler):
+    def get(self):
+        user_data = UserStatus(self.request.uri)
+        message = {}
+        dropzone_key = int(self.request.get("dropzone"))
+        user = user_data['user']
+        if user:
+            rm = RegMega(user)
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            registration = Registration.get_by_jumper(dropzone_key, rm.jumper).get()
+            load_struct = LoadStructure(dropzone_key)
+            jumper = Jumper.get_by_id(rm.jumper)
+            load = Load.get_by_id(int(self.request.get('load')))
+        else:
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
         template_values = {
             'user_data': user_data,
-            'message' : message,
-            'reg_mega' : reg_mega,
-            'registration_status' : REGISTRATION_STATUS,
-            'registration_colours' : REGISTRATION_COLOURS,
+            'message': message,
+            'dropzone': dropzone,
+            'registration': registration,
+            'registration_status': REGISTRATION_STATUS,
+            'registration_colours': REGISTRATION_COLOURS,
+            'dropzone_status': DROPZONE_STATUS,
+            'load': load,
+            'slots': load_struct.slot_mega[load.key.id()],
+            'load_colours': LOAD_COLOURS,
+            'load_status': LOAD_STATUS,
+            'slotsize': load_struct.freeslots(),
         }
-        template = JINJA_ENVIRONMENT.get_template('clientdz.html')
+        template = JINJA_ENVIRONMENT.get_template('clientload.html')
         self.response.write(template.render(template_values))
 
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            dropzone_key = int(self.request.get("dropzone"))
+            load_key= int(self.request.get('load'))
+            action = self.request.get('action')
+            rm = RegMega(user)
+            registration = Registration.get_by_jumper(dropzone_key, rm.jumper).get()
+            # Set the Load Details
+            load = Load.get_by_id(load_key)
+            load_struct = LoadStructure(dropzone_key)
+            message = load_struct.manifest_action(action, load, registration)
+        return self.redirect(self.request.referer)

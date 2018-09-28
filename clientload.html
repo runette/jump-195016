@@ -1,0 +1,89 @@
+{% extends "client.html" %}
+
+{% block title %}
+    Client Dz List
+{% endblock %}
+
+
+{% block main %}
+<a href="/client/manifest?dropzone={{dropzone.key.id()}}">
+        <div class="card">
+            <div class="card-body ">
+                <div class="row ">
+                    <h3 class="col-6 ">
+                        <span class="badge badge-primary">
+                        {{dropzone.name}}
+                        </span>
+                    </h3>
+
+                    <div class="col-3 ">
+                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
+                    </div>
+                    <div class="col-3 ">
+                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
+                        {{dropzone_status[dropzone.status]}} </span>
+                    </div>
+                </div>
+                <div class="row">
+            <h3 class='col-6'> <span class="badge badge-primary">Load {{load.number}}</span> </h3>
+            <div class="col-3"> <span class="badge badge-secondary">{{load.time.strftime("%H:%M")}} </span></div>
+            <div class="col-3"><span class=" badge {{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">{{load_status[load.status]}}</span></div>
+        </div>
+        <div class="row">
+            <div class="col-6"><span class="badge badge-secondary">Free Slots : {{ slotsize[load.key.id()] }}</span></div>
+            <div class="col-6">
+                <form action="/client/load" method="post">
+                        <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                        <input type="hidden" name="load" value="{{load.key.id()}}">
+                        <input type="hidden" name="action" value="add">
+                        <button class="btn btn-outline-warning" type="submit">Manifest</button>
+                </form>
+            </div>
+        </div>
+            </div>
+        </div>
+</a>
+
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr class="row justify-content-between">
+            <th scope="col-4"></th>
+            <th scope="col-4"></th>
+        </tr>
+        </thead>
+        <tbody id="scroll-table">
+                    {% for slot in slots %}
+                    <tr>
+                        <td>
+                            <div class="card">
+                                <div class="card-body bg-primary text-white">
+                                    <h6 class="card-title">
+                                        <div class="row">
+                                            <div class="col">
+                                                {{loop.index}}
+                                            </div>
+                                            <div class="col">
+                                                {{slot.name}}
+                                            </div>
+                                        </div>
+                                    </h6>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <form action="/client/load" method="post">
+                                <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                <input type="hidden" name="load" value="{{load.key.id()}}">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-outline-warning" type="submit">Remove</button>
+                            </form>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -94,12 +94,7 @@ class Load(ndb.Model):
     def get_loads (cls, dropzone_key) :
         return cls.query(Load.date == datetime.date.today(),Load.dropzone == dropzone_key).order(Load.number)
 
-    def put(self, **ctx_options):
-        ret = self._put( **ctx_options)
-        if self.has_complete_key():
-            ls = LoadStructure(self.dropzone)
-            ls.refresh()
-        return ret
+
 
 
 class Manifest(ndb.Model):
@@ -164,18 +159,9 @@ class Registration(ndb.Model) :
     def get_all_by_jumper(cls, jumper_key):
         return cls.query(Registration.jumper == jumper_key)
 
-    def put(self, **ctx_options):
-        ret = self._put( **ctx_options)
-        if self.has_complete_key():
-            js = JumperStructure(self.dropzone)
-            js.refresh()
-        return ret
 
-    def delete(self):
-        self.key.delete()
-        js = JumperStructure(self.dropzone)
-        js.refresh()
-        return
+
+
 
 
 class Sale(ndb.Model) :
@@ -287,7 +273,7 @@ class LoadStructure:
                         load._put()
                         flag = True
                         break
-        self.refresh()
+        self.save()
         return self
 
     def add_load(self):
@@ -345,8 +331,51 @@ class LoadStructure:
         self.save()
         return
 
+    def retime_load(self, load_key, minutes):
+        for load in self.loads:
+            if load.key.id() == load_key:
+                load.time = NextLoadTime(load, datetime.timedelta(minutes=minutes))
+                load.put()
+        self.retime_chain()
+        return
 
-class JumperStructure () :
+    def set_status(self, load_key, status):
+        for load in self.loads:
+            if load.key.id() == load_key:
+                load.status = status
+                load.put()
+        self.save()
+        return
+
+    def manifest_action(self, action, load, registration):
+        message = {}
+        slot_size = self.freeslots()
+        if action == "add":
+            if load.status in [WAITING, HOLD]:
+                if slot_size[load.key.id()] > 0:
+                    if registration.current == CURRENT:
+                        self.add_manifest(load.key.id(), registration.jumper)
+                    else:
+                        message.update({'title': "Not Current"})
+                        message.update({'body': "Cannot Manifest a Jumper who is not Current"})
+                else:
+                    message.update({'title': "No Slots"})
+                    message.update({'body': "You cannot manifest on this load - there are no slots left"})
+            else:
+                message.update({'title': "Cannot Add"})
+                message.update(
+                    {'body': "This Load is not Open for Manifest. The Load status is \" " + LOAD_STATUS[
+                        load.status] + "\""})
+        if action == "delete":
+            if load.status in [WAITING, HOLD]:
+                Manifest.delete_manifest(load.key.id(), registration.jumper)
+                self.refresh()
+            else:
+                message.update({'title': "Cannot Delete"})
+                message.update(
+                    {'body': "Cannot delete loads that have taken off - use end of day function "})
+
+class JumperStructure :
     jumpers = []
     dropzone_key=0
 
@@ -380,6 +409,46 @@ class JumperStructure () :
                 break
         return
 
+    def delete(self, jumper_key):
+        registration = Registration.get_by_jumper(self.dropzone_key, jumper_key).get()
+        jumper = Jumper.get_by_id(jumper_key)
+        try:
+            self.jumpers.remove((jumper, registration))
+        except ValueError:
+            pass
+        registration.key.delete()
+        self.save()
+        return
+
+    def add(self, jumper_key):
+        registration = Registration(
+            jumper=jumper_key,
+            dropzone=self.dropzone_key,
+            waiver=datetime.date.today(),
+            reserve=datetime.date.today(),
+            current=NOT_CURRENT
+        )
+        registration.put()
+        self.jumpers.append((Jumper.get_by_id(jumper_key), registration))
+        self.save()
+        return
+
+    def update(self, jumper_key, waiver, reserve, current):
+        registration = Registration.get_by_jumper(self.dropzone_key, jumper_key).get()
+        jumper= Jumper.get_by_id(jumper_key)
+        try :
+            self.jumpers.remove((jumper, registration))
+        except ValueError:
+            pass
+        registration.waiver = waiver
+        registration.reserve = reserve
+        registration.current = current
+        registration.put()
+        self.jumpers.append((jumper, registration))
+        self.save()
+        return
+
+
 
 def UserStatus (uri) :
     # set up the user context and links for the navbar
@@ -406,5 +475,24 @@ def NextLoadTimeDz(previous_load, dropzone):
     return NextLoadTime(previous_load, datetime.timedelta(minutes=dropzone.default_load_time))
 
 
+class RegMega:
+    reg_mega = []
 
+    def __init__(self, user):
+        self.reg_mega = []
+        jumper = Jumper.get_by_gid(user.user_id()).get()
+        if jumper:
+            self.jumper = jumper.key.id()
+            registrations = Registration.get_all_by_jumper(self.jumper)
+            for registration in registrations:
+                self.reg_mega.append((registration, Dropzone.get_by_id(registration.dropzone)))
+        else:
+            jumper = Jumper(
+                name=user.nickname(),
+                email=user.email(),
+                google_id=user.user_id(),
+            )
+            jumper.put()
+            self.jumper = jumper.key.id()
+        return
 

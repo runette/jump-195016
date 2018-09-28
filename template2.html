@@ -3,13 +3,9 @@
 {% block navbar_right %}
       {% set user = user_data['user'] %}
       <ul class="nav navbar-nav navbar-right">
-          <li>
-              {% if user %}
-              <img class="m-0 p-0" id="thumbnail" height="30" width="30" src="">
-              {% endif %}
-              <a class="btn btn-primary" href="{{ user_data['url']|safe }}" role="button"> {{
-                  user_data['url_linktext']}}</a>
-          </li>
+          <li class="nav-item m-1">
+                  <a class="btn btn-primary p-1"  href="{{ user_data['url']|safe }}" role="button"> {% if user %}  <img class="m-0 p-0" id="thumbnail" height="30" width="30" src=""> {% endif %}{{ user_data['url_linktext']}}</a>
+                </li>
       </ul>
 {% endblock %}
 

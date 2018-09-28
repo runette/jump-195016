@@ -12,8 +12,6 @@ handlers:
 - url: /bootstrap
   static_dir: bootstrap
 
-- url: /bootstrap-datetimepicker
-  static_dir: bootstrap-datetimepicker
 
 - url: /custom
   static_dir: custom

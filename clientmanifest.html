@@ -1,0 +1,57 @@
+{% extends "client.html" %}
+
+{% block title %}
+    Client Dz List
+{% endblock %}
+
+
+{% block main %}
+<a href="/client">
+        <div class="card">
+            <div class="card-body bd-gray">
+                <div class="row ">
+                    <h3 class="col-6 ">
+                        <span class="badge badge-primary">
+                        {{dropzone.name}}
+                        </span>
+                    </h3>
+                    <div class="col-3 ">
+                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
+                    </div>
+                    <div class="col-3 ">
+                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
+                        {{dropzone_status[dropzone.status]}} </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+</a>
+
+{% for load in loads %}
+<a href="/client/load?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}">
+<div class="card">
+        <div class="card-body bg-primary text-white">
+            <div class="row justify-content-between">
+                <div class="col-6">
+                    <h6 class="card-title">Load {{load.number}}</h6>
+                    <p class="card-text">
+                        <span class="badge {{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">{{load_status[load.status]}}</span>
+                    </p>
+                </div>
+                <div class="col-6 ">
+                    <h6 class="card-title"> Time {{load.time.strftime("%H:%M")}} </h6>
+                    {% if load.key.id() in (slots) %}
+                        <p class="card-text">
+                            <span class="badge badge-success p-1">Manifested</span>
+                        </p>
+                    {% else %}
+                        <p class="card-text"> Free Slots : {{ slotsize[load.key.id()] }}</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+</div>
+</a>
+{% endfor %}
+{% endblock %}

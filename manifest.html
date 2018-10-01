@@ -64,9 +64,24 @@ Manifest
                             </div>
                         </td>
                         <td>
-                            <a class="btn btn-outline-primary"
-                               href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=details"
-                               role="button">View Details</a>
+                            <div class="btn-group dropright">
+
+                                    <button type="button" class="btn btn-primary">
+                                        Change Package
+                                    </button>
+                                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        <span class="sr-only">Toggle Dropright</span>
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        {% for key, sale in sales.iteritems() %}
+                                        <a class="dropdown-item"
+                                           href="/manifestaction?dropzone={{dropzone.key.id()}}&jumper={{slot.key.id()}}&to_sale={{key}}&action=change_sale">{{sale.name}}</a>
+                                        {% endfor %}
+                                    </div>
+
+                            </div>
+
                             <a class="btn btn-outline-warning"
                                href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{slot.key.id()}}&action=delete"
                                role="button">Remove</a>

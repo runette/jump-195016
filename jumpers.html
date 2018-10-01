@@ -59,7 +59,7 @@ Manage Jumpers
 {% for jumper_mega in jumpers %}
 {% set jumper = jumper_mega[0] %}
 {% set registration = jumper_mega[1] %}
-<div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %}"
+<div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %} border"
      id="list-{{jumper.key.id()}}" role="tabpanel"
      aria-labelledby="list-{{jumper.key.id()}}-list">
     <form action="/jumpers" id="form-{{jumper.key.id()}}">
@@ -87,28 +87,24 @@ Manage Jumpers
                 </div>
             </div>
         </div>
-        <div class="input-group date">
+        <div class="form-group row">
             <label for="waiver" class="col-4 col-form-label">Waiver Expiry</label>
-            <div class="control-group">
                 <div class="col-8">
                     <div class="controls input-append date form_date" data-date="" data-date-format="dd/mm/yy" data-link-field="dtp_input1" data-link-format="yyyy-mm-dd">
                         <input id="waiver" name="waiver"size="16" type="form-control" value="{{registration.waiver.strftime("%d/%m/%y")}}" readonly>
-                        <span class="add-on"><i class="icon-remove"></i></span>
                         <span class="add-on"><i class="icon-th"></i></span>
                     </div>
                     <input type="hidden" id="dtp_input1" value="" /><br/>
                 </div>
-            </div>
         </div>
-        <div class="input-group date">
+        <div class="form-group row">
             <label for="reserve" class="col-4 col-form-label">Reserve Expiry</label>
             <div class="col-8">
                 <div class="controls input-append date form_date" data-date="" data-date-format="dd/mm/yy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
-                        <input id="reserve" name="reserve"size="16" type="form-control" value="{{registration.reserve.strftime("%d/%m/%y")}}" readonly>
-                        <span class="glyphicon glyphicon-th"></span>
-                        <span class="add-on"><i class="icon-th"></i></span>
-                    </div>
-                    <input type="hidden" id="dtp_input2" value="" /><br/>
+                    <input id="reserve" name="reserve"size="16" type="form-control" value="{{registration.reserve.strftime("%d/%m/%y")}}" readonly>
+                    <span class="add-on"><i class="icon-th"></i></span>
+                </div>
+                <input type="hidden" id="dtp_input2" value="" /><br/>
             </div>
         </div>
         <div class="form-group row">
@@ -139,6 +135,17 @@ Manage Jumpers
             </div>
         </div>
     </form>
-</div>
+<form  id="sales-{{jumper.key.id()}}" method="get">
+    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}" />
+    <input type="hidden" name="jumper" value="{{jumper.key.id()}}"/>
+    <div class="form-group row">
+            <div class="offset-4 col-8">
+                <button name="fetch" type="submit" form="sales-{{jumper.key.id()}}" class="btn btn-primary" formaction="/sales?action=fetch">Get Sales Packages</button>
+            </div>
+    </div>
+</form>
+
 {%endfor%}
+</div>
+
 {% endblock %}

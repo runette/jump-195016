@@ -79,6 +79,23 @@
                                 <input type="hidden" name="action" value="delete">
                                 <button class="btn btn-outline-warning" type="submit">Remove</button>
                             </form>
+                            <div class="btn-group dropright">
+
+                                    <button type="button" class="btn btn-primary">
+                                        Change Package
+                                    </button>
+                                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        <span class="sr-only">Toggle Dropright</span>
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        {% for key, sale in sales.iteritems() %}
+                                        <a class="dropdown-item"
+                                           href="/client/load?dropzone={{dropzone.key.id()}}&to_sale={{key}}&action=change_sale">{{sale.details.name}}</a>
+                                        {% endfor %}
+                                    </div>
+
+                            </div>
 
                         </td>
                     </tr>

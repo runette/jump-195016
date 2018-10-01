@@ -34,6 +34,10 @@ class Client (webapp2.RequestHandler):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
         message = {}
+        if self.request.get('action') == 'account':
+            url='/client/account'
+        else:
+            url='/client/manifest'
         if user:
             rm = RegMega(user)
             reg_mega = rm.reg_mega
@@ -48,6 +52,7 @@ class Client (webapp2.RequestHandler):
             'registration_status': REGISTRATION_STATUS,
             'registration_colours': REGISTRATION_COLOURS,
             'dropzone_status': DROPZONE_STATUS,
+            'url': url,
 
         }
         template = JINJA_ENVIRONMENT.get_template('clientdz.html')
@@ -135,6 +140,10 @@ class ClientLoads(webapp2.RequestHandler):
             load_struct = LoadStructure(dropzone_key)
             jumper = Jumper.get_by_id(rm.jumper)
             load = Load.get_by_id(int(self.request.get('load')))
+            sm = SalesMega(dropzone_key,jumper.key.id())
+            action = self.request.get('action')
+            if action == 'change_sale':
+                pass
         else:
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
@@ -151,6 +160,7 @@ class ClientLoads(webapp2.RequestHandler):
             'load_colours': LOAD_COLOURS,
             'load_status': LOAD_STATUS,
             'slotsize': load_struct.freeslots(),
+            'sales' : sm.sales,
         }
         template = JINJA_ENVIRONMENT.get_template('clientload.html')
         self.response.write(template.render(template_values))
@@ -169,3 +179,35 @@ class ClientLoads(webapp2.RequestHandler):
             load_struct = LoadStructure(dropzone_key)
             message = load_struct.manifest_action(action, load, registration)
         return self.redirect(self.request.referer)
+
+class ClientAccount(webapp2.RequestHandler):
+    def get(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            dropzone_key = int(self.request.get("dropzone"))
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            rm = RegMega(user)
+            jumper = Jumper.get_by_id(rm.jumper)
+            jumper_key = jumper.key.id()
+            sales = SalesMega(dropzone_key, jumper_key)
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'active': 3,
+                'dropzone_status': DROPZONE_STATUS,
+                'sales': sales.sales,
+                'jumper_key': jumper_key,
+                'packages': SalesPackage.get_by_dropzone(dropzone_key),
+            }
+        else:
+            dropzone = DEFAULT_DROPZONE
+            template_values = {
+                'user_data': user_data,
+                'dropzone': dropzone,
+                'active': 3,
+                'dropzone_status': DROPZONE_STATUS,
+            }
+        template = JINJA_ENVIRONMENT.get_template('clientaccount.html')
+        self.response.write(template.render(template_values))
+        return

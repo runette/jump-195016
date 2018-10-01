@@ -103,19 +103,23 @@ class Load(ndb.Model):
 
 
 
-
 class Manifest(ndb.Model):
     load = ndb.IntegerProperty()  # The key for the load that this manifest applies to
     jumper = ndb.IntegerProperty() # The key for jumper this applies to
+    sale = ndb.IntegerProperty()
 
     @classmethod
-    def get_by_load(cls, load_key) :
+    def get_by_load(cls, load_key):
         return cls.query(Manifest.load == load_key)
 
     @classmethod
-    def delete_manifest(cls, load_key, jumper_key):
-        manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).fetch()
-        return manifest[0].key.delete()
+    def get_by_sale(cls, sale_key):
+        return cls.query(Manifest.sale == sale_key).fetch()
+
+    @classmethod
+    def get_sale_usage(cls, sale_key):
+        used = cls.get_by_sale(sale_key)
+        return len(used)
 
 
 
@@ -167,21 +171,6 @@ class Registration(ndb.Model) :
         return cls.query(Registration.jumper == jumper_key)
 
 
-
-
-
-
-class Sale(ndb.Model) :
-    jumper = ndb.IntegerProperty()
-    dropzone = ndb.IntegerProperty()
-    jumps_remaining = ndb.IntegerProperty()
-    package = ndb.IntegerProperty()
-
-    @classmethod
-    def getSales(cls, dropzone_key, jumper_key):
-        return cls.query(Sale.jumper == jumper_key, Sale.dropzone == dropzone_key).order(Sale.package)
-
-
 class SalesPackage(ndb.Model):
     name = ndb.StringProperty()
     dropzone = ndb.IntegerProperty()
@@ -190,7 +179,17 @@ class SalesPackage(ndb.Model):
 
     @classmethod
     def get_by_dropzone(cls, dropzone_key):
-        return cls.query(SalesPackage.dropzone == dropzone_key).order(SalesPackage.name)
+        return cls.query(SalesPackage.dropzone == dropzone_key).order(SalesPackage.name).fetch()
+
+
+class Sale(ndb.Model) :
+    jumper = ndb.IntegerProperty()
+    dropzone = ndb.IntegerProperty()
+    package = ndb.IntegerProperty()
+
+    @classmethod
+    def get_sales(cls, dropzone_key, jumper_key):
+        return cls.query(Sale.jumper == jumper_key, Sale.dropzone == dropzone_key).order(Sale.package)
 
 
 class Jumper(ndb.Model):
@@ -328,13 +327,33 @@ class LoadStructure:
         return
 
     def add_manifest(self,load_key, jumper_key):
-        manifest = Manifest(
-            load=load_key,
-            jumper=jumper_key
-        )
-        manifest.put()
+        sm=SalesMega(self.dropzone_key,jumper_key)
+        for id, sale in sm.sales.iteritems():
+            if sale['free'] >0:
+                manifest = Manifest(
+                    load=load_key,
+                    jumper=jumper_key,
+                    sale=id
+                )
+                manifest.put()
+                slots = self.slot_mega[load_key]
+                slots.append(Jumper.get_by_id(manifest.jumper))
+                self.save()
+                sm.use(id)
+                sm.save()
+                break
+        return
+
+    def delete_manifest(self, load_key, jumper_key):
+        manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).get()
         slots = self.slot_mega[load_key]
-        slots.append(Jumper.get_by_id(manifest.jumper))
+        jumper = Jumper.get_by_id(jumper_key)
+        sm=SalesMega(self.dropzone_key, jumper_key)
+        sale_key = manifest.sale
+        manifest.key.delete()
+        slots.remove(jumper)
+        sm.un_use(sale_key)
+        sm.save()
         self.save()
         return
 
@@ -375,8 +394,7 @@ class LoadStructure:
                         load.status] + "\""})
         if action == "delete":
             if load.status in [WAITING, HOLD]:
-                Manifest.delete_manifest(load.key.id(), registration.jumper)
-                self.refresh()
+                self.delete_manifest(load.key.id(), registration.jumper)
             else:
                 message.update({'title': "Cannot Delete"})
                 message.update(
@@ -485,9 +503,22 @@ def NextLoadTimeDz(previous_load, dropzone):
 class RegMega:
     reg_mega = []
 
-    def __init__(self, user):
+    def __init__(self,user):
+        self.user = user
+        self.key = user.user_id()
+        client = memcache.Client()
+        content = client.get(self.key)
+        if content:
+            self.reg_mega = content
+            self.jumper = Jumper.get_by_gid(self.user.user_id()).get().key.id()
+        else:
+            self.refresh()
+        return
+
+
+    def refresh(self):
         self.reg_mega = []
-        jumper = Jumper.get_by_gid(user.user_id()).get()
+        jumper = Jumper.get_by_gid(self.user.user_id()).get()
         if jumper:
             self.jumper = jumper.key.id()
             registrations = Registration.get_all_by_jumper(self.jumper)
@@ -495,11 +526,101 @@ class RegMega:
                 self.reg_mega.append((registration, Dropzone.get_by_id(registration.dropzone)))
         else:
             jumper = Jumper(
-                name=user.nickname(),
-                email=user.email(),
-                google_id=user.user_id(),
+                name=self.user.nickname(),
+                email=self.user.email(),
+                google_id=self.user.user_id(),
             )
             jumper.put()
             self.jumper = jumper.key.id()
+        self.save()
         return
 
+    def save(self):
+        client = memcache.Client()
+        while True:  # Retry loop
+            content = client.gets(self.key)
+            if content is None:
+                memcache.set(self.key, self.reg_mega,time=1000)
+                break
+            if client.cas(self.key, self.reg_mega, time=1000):
+                break
+        return
+
+class SalesMega:
+    sales={}
+
+    def __init__(self, dropzone_key, jumper_key):
+        self.dropzone_key = dropzone_key
+        self.jumper_key = jumper_key
+        self.key = str(dropzone_key) + str(jumper_key)
+        client = memcache.Client()
+        content = client.get(self.key)
+        if content:
+            self.sales = content
+        else:
+            self.refresh()
+        return
+
+    def refresh(self):
+        self.sales = {}
+        all_sales = Sale.get_sales(self.dropzone_key,self.jumper_key)
+        for sale in all_sales:
+            usage = Manifest.get_sale_usage(sale.key.id())
+            sp = SalesPackage.get_by_id(sale.package)
+            free = sp.size - usage
+            sale_detail = {
+                'details' : sp,
+                'free' : free,
+            }
+            self.sales.update({sale.key.id():sale_detail})
+        self.save()
+        return
+
+    def save(self):
+        client = memcache.Client()
+        while True:  # Retry loop
+            content = client.gets(self.key)
+            if content is None:
+                memcache.set(self.key, self.sales,time=1000)
+                break
+            if client.cas(self.key, self.sales, time=1000):
+                break
+        return
+
+    def use(self, sale_key):
+        self.sales[sale_key]['free'] = self.sales[sale_key]['free'] -1
+        self.save()
+        return
+
+    def un_use(self, sale_key):
+        self.sales[sale_key]['free'] = self.sales[sale_key]['free'] +1
+        self.save()
+        return
+
+    def sell(self, package_key):
+        package = SalesPackage.get_by_id(package_key)
+        sale = Sale(
+            dropzone=self.dropzone_key,
+            jumper=self.jumper_key,
+            package=package_key
+        )
+        sale.put()
+        sale_detail = {
+            'details': package,
+            'free': package.size,
+        }
+        self.sales.update({sale.key.id(): sale_detail})
+        self.save()
+        return
+
+    def change_sale(self, from_sale, to_sale, load_key, jumper_key):
+        manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).get()
+        try:
+            self.un_use(from_sale)
+            self.use(to_sale)
+            manifest.sale = to_sale
+        except Exception :
+            self.refresh()
+            return
+        manifest.put()
+        return

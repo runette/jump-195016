@@ -9,7 +9,7 @@
     {% for dropzones in reg_mega %}
         {% set registration = dropzones[0] %}
         {% set dropzone = dropzones[1] %}
-        <a href="/client/manifest?dropzone={{dropzone.key.id()}}">
+        <a href="{{url}}?dropzone={{dropzone.key.id()}}">
         <div class="card">
             <div class="card-body bg-primary text-white">
                 <div class="row ">

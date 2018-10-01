@@ -118,15 +118,47 @@ class EndDay(webapp2.RequestHandler):
 class ManageSales(webapp2.RequestHandler):
     def get(self):
         user_data = UserStatus(self.request.uri)
-
-        dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
-        dropzone = Dropzone.get_by_id(dropzone_key)
-
+        message = {}
+        sales = {}
+        if user_data['user']:
+            dropzone_key = int(self.request.get('dropzone'))
+            dropzone = Dropzone.get_by_id(dropzone_key)
+            jumper_key = int(self.request.get('jumper'))
+            action = self.request.get('action')
+            user = User.get_user(user_data['user'].email())
+            if user.role in [ADMIN, SALES]:
+                sales = SalesMega(dropzone_key, jumper_key)
+                if action == 'fetch':
+                    pass
+                if action == 'add':
+                    package_key = int(self.request.get('package'))
+                    sales.sell(package_key)
+                if action == 'delete':
+                    pass
+                template_values = {
+                    'user_data': user_data,
+                    'dropzone': dropzone,
+                    'active': 3,
+                    'dropzone_status': DROPZONE_STATUS,
+                    'sales':sales.sales,
+                    'message': message,
+                    'jumper_key' : jumper_key,
+                    'packages': SalesPackage.get_by_dropzone(dropzone_key),
+                }
+                template = JINJA_ENVIRONMENT.get_template('sales_list.html')
+                self.response.write(template.render(template_values))
+                return
+            else:
+                message.update({'title': "Cannot Sales"})
+                message.update(
+                    {'body': "You do not have Sales rights "})
+        dropzone = DEFAULT_DROPZONE
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'active': 2,
-            'dropzone_status': DROPZONE_STATUS
+            'dropzone_status': DROPZONE_STATUS,
+            'message':message,
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
@@ -226,13 +258,11 @@ class ManageManifest(webapp2.RequestHandler):
                 message.update({'title': "Cannot Manifest"})
                 message.update(
                     {'body': "You do not have Manifest rights "})
-
             #Refresh the Manifests
-
-
             slot_mega = load_struct.slot_mega
             slot_size = load_struct.freeslots()
             js=JumperStructure(dropzone_key)
+            sales = SalesMega(dropzone_key, jumper_key)
             template_values = {
                 'user_data': user_data,
                 'dropzone': dropzone,
@@ -244,7 +274,8 @@ class ManageManifest(webapp2.RequestHandler):
                 'active': 1,
                 'dropzone_status': DROPZONE_STATUS,
                 'load_status': LOAD_STATUS,
-                'load_colours': LOAD_COLOURS
+                'load_colours': LOAD_COLOURS,
+                'sales':sales.sales,
             }
         else:
             template_values = {
@@ -316,7 +347,7 @@ class ManageJumpers(webapp2.RequestHandler):
                 'active': 3,
                 'dropzone_status': DROPZONE_STATUS,
                 'registration_status': REGISTRATION_STATUS,
-                'registration_colours': REGISTRATION_COLOURS
+                'registration_colours': REGISTRATION_COLOURS,
             }
         else:
             template_values = {
@@ -362,7 +393,7 @@ class ManageDz(webapp2.RequestHandler):
                 'role_colours': ROLE_COLOURS,
                 'active': 4,
                 'dropzone_status': DROPZONE_STATUS,
-                'packages': SalesPackage.get_by_dropzone(dropzone_key).fetch(),
+                'packages': SalesPackage.get_by_dropzone(dropzone_key),
                 'request' : self.request.application_url,
 
             }
@@ -376,6 +407,7 @@ class ManageDz(webapp2.RequestHandler):
             response = "index.html"
         template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))
+        return
 
 
 class UpdateDz(webapp2.RequestHandler):
@@ -453,8 +485,6 @@ class UpdateSales(webapp2.RequestHandler):
                 if package:
                     package.key.delete()
         self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=sales')
-
-
 
 class RetimeLoads(webapp2.RequestHandler):
     def get(self):

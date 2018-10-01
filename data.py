@@ -328,6 +328,10 @@ class LoadStructure:
 
     def add_manifest(self,load_key, jumper_key):
         sm=SalesMega(self.dropzone_key,jumper_key)
+        message={
+            'title': 'No Credit',
+            'body': 'Jumper has no available jump credits'
+        }
         for id, sale in sm.sales.iteritems():
             if sale['free'] >0:
                 manifest = Manifest(
@@ -342,7 +346,7 @@ class LoadStructure:
                 sm.use(id)
                 sm.save()
                 break
-        return
+        return message
 
     def delete_manifest(self, load_key, jumper_key):
         manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).get()
@@ -380,7 +384,7 @@ class LoadStructure:
             if load.status in [WAITING, HOLD]:
                 if slot_size[load.key.id()] > 0:
                     if registration.current == CURRENT:
-                        self.add_manifest(load.key.id(), registration.jumper)
+                        message = self.add_manifest(load.key.id(), registration.jumper)
                     else:
                         message.update({'title': "Not Current"})
                         message.update({'body': "Cannot Manifest a Jumper who is not Current"})
@@ -399,6 +403,7 @@ class LoadStructure:
                 message.update({'title': "Cannot Delete"})
                 message.update(
                     {'body': "Cannot delete loads that have taken off - use end of day function "})
+        return message
 
 class JumperStructure :
     jumpers = []

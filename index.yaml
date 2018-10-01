@@ -24,3 +24,9 @@ indexes:
   properties:
   - name: dropzone
   - name: name
+
+- kind: Sale
+  properties:
+  - name: dropzone
+  - name: jumper
+  - name: package

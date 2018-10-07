@@ -345,6 +345,7 @@ class LoadStructure:
                 self.save()
                 sm.use(id)
                 sm.save()
+                message={}
                 break
         return message
 

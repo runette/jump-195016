@@ -1,11 +1,5 @@
-{% extends "client.html" %}
 
-{% block title %}
-    Client Configuration
-{% endblock %}
-
-{% block main %}
-    <form action="/client/config" method="get">
+    <form action="#" id="config" method="post" >
      <input type="hidden" name="action" value="update">
      <div class="form-group ">
       <label class="control-label requiredField" for="name">
@@ -14,7 +8,7 @@
         *
        </span>
       </label>
-      <input class="form-control" id="name" name="name" type="text" value="{{jumper.name}}"/>
+      <input class="form-control" id="name" name="name" type="text" value="{{jumper.name}}" onchange="new_submit('config', '/client/config')"/>
      </div>
      <div class="form-group ">
       <label class="control-label requiredField" for="email">
@@ -23,17 +17,12 @@
         *
        </span>
       </label>
-      <input class="form-control" id="email" name="email" type="email" value="{{jumper.email}}"/>
+      <input class="form-control" id="email" name="email" type="email" value="{{jumper.email}}" onchange="new_submit('config', '/client/config')"/>
       <span class="help-block" id="hint_email">
        Must be gmail
       </span>
      </div>
-     <div class="form-group">
-      <div>
-       <button class="btn btn-primary " name="submit" type="submit">
-        Submit
-       </button>
-      </div>
-     </div>
-    </form>
-{% endblock %}
+     </form>
+
+
+

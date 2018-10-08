@@ -24,10 +24,10 @@ app = webapp2.WSGIApplication([
     webapp2.Route ('/kiosk', handler=Kiosk),
     webapp2.Route ('/kiosk/update', handler=UpdateKiosk),
     webapp2.Route ('/client', handler=Client),
+    webapp2.Route ('/client_dz', handler=ClientDz),
     webapp2.Route ('/client/manifest', handler=ClientManifest),
     webapp2.Route ('/client/account', handler=ClientAccount),
     webapp2.Route ('/client/config', handler=ClientConfig),
     webapp2.Route ('/client/load', handler=ClientLoads),
-
 ], debug=True)
 

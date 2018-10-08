@@ -34,10 +34,28 @@ class Client (webapp2.RequestHandler):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
         message = {}
-        if self.request.get('action') == 'account':
-            url='/client/account'
-        else:
-            url='/client/manifest'
+        if not user:
+            message.update({'title': "Not logged in"})
+            message.update({'body': "You are not logged in"})
+            reg_mega = {}
+        template_values = {
+            'user_data': user_data,
+            'message': message,
+
+        }
+        template = JINJA_ENVIRONMENT.get_template('client.html')
+        self.response.write(template.render(template_values))
+
+    def post(self):
+        pass
+        return
+
+class ClientDz (webapp2.RequestHandler):
+    def post(self):
+        # GET PARAMETERS
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        message = {}
         if user:
             rm = RegMega(user)
             reg_mega = rm.reg_mega
@@ -46,21 +64,18 @@ class Client (webapp2.RequestHandler):
             message.update({'body': "You are not logged in"})
             reg_mega = {}
         template_values = {
-            'user_data': user_data,
             'message': message,
             'reg_mega': reg_mega,
             'registration_status': REGISTRATION_STATUS,
             'registration_colours': REGISTRATION_COLOURS,
             'dropzone_status': DROPZONE_STATUS,
-            'url': url,
-
         }
         template = JINJA_ENVIRONMENT.get_template('clientdz.html')
         self.response.write(template.render(template_values))
 
 
 class ClientConfig (webapp2.RequestHandler) :
-    def get(self):
+    def post(self):
         # GET PARAMETERS
         user_data = UserStatus(self.request.uri)
         message = {}
@@ -77,7 +92,6 @@ class ClientConfig (webapp2.RequestHandler) :
             jumper = ""
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
-
         template_values = {
             'user_data': user_data,
             'jumper' : jumper,
@@ -88,7 +102,7 @@ class ClientConfig (webapp2.RequestHandler) :
 
 
 class ClientManifest(webapp2.RequestHandler) :
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         message = {}
         dropzone_key = int(self.request.get("dropzone"))
@@ -128,7 +142,7 @@ class ClientManifest(webapp2.RequestHandler) :
         self.response.write(template.render(template_values))
 
 class ClientLoads(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         message = {}
         dropzone_key = int(self.request.get("dropzone"))
@@ -142,8 +156,8 @@ class ClientLoads(webapp2.RequestHandler):
             load = Load.get_by_id(int(self.request.get('load')))
             sm = SalesMega(dropzone_key,jumper.key.id())
             action = self.request.get('action')
-            if action == 'change_sale':
-                pass
+            if action:
+                message = load_struct.manifest_action(action, load, registration)
         else:
             message.update({'title': "Not logged in"})
             message.update({'body': "You are not logged in"})
@@ -164,7 +178,9 @@ class ClientLoads(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('clientload.html')
         self.response.write(template.render(template_values))
+        return
 
+class ClientActions(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
@@ -181,13 +197,14 @@ class ClientLoads(webapp2.RequestHandler):
         return self.redirect(self.request.referer)
 
 class ClientAccount(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
         if user:
             dropzone_key = int(self.request.get("dropzone"))
             dropzone = Dropzone.get_by_id(dropzone_key)
             rm = RegMega(user)
+            registration = Registration.get_by_jumper(dropzone_key, rm.jumper).get()
             jumper = Jumper.get_by_id(rm.jumper)
             jumper_key = jumper.key.id()
             sales = SalesMega(dropzone_key, jumper_key)
@@ -199,6 +216,9 @@ class ClientAccount(webapp2.RequestHandler):
                 'sales': sales.sales,
                 'jumper_key': jumper_key,
                 'packages': SalesPackage.get_by_dropzone(dropzone_key),
+                'registration': registration,
+                'registration_status': REGISTRATION_STATUS,
+                'registration_colours': REGISTRATION_COLOURS,
             }
         else:
             dropzone = DEFAULT_DROPZONE

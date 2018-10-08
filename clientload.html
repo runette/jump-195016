@@ -1,12 +1,5 @@
-{% extends "client.html" %}
 
-{% block title %}
-    Client Dz List
-{% endblock %}
-
-
-{% block main %}
-<a href="/client/manifest?dropzone={{dropzone.key.id()}}">
+<a onclick="main_set('/client/manifest?dropzone={{dropzone.key.id()}}','nav-1')">
         <div class="card">
             <div class="card-body ">
                 <div class="row ">
@@ -32,12 +25,12 @@
         <div class="row">
             <div class="col-6"><span class="badge badge-secondary">Free Slots : {{ slotsize[load.key.id()] }}</span></div>
             <div class="col-6">
-                <form action="/client/load" method="post">
+                <form id="manifest"method="post">
                         <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
                         <input type="hidden" name="load" value="{{load.key.id()}}">
                         <input type="hidden" name="action" value="add">
-                        <button class="btn btn-outline-warning" type="submit">Manifest</button>
                 </form>
+                <button class="btn btn-outline-warning" onclick="new_submit('manifest', '/client/load')">Manifest</button>
             </div>
         </div>
             </div>
@@ -73,12 +66,12 @@
                             </div>
                         </td>
                         <td>
-                            <form action="/client/load" method="post">
+                            <form  method="post" id="delete">
                                 <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
                                 <input type="hidden" name="load" value="{{load.key.id()}}">
                                 <input type="hidden" name="action" value="delete">
-                                <button class="btn btn-outline-warning" type="submit">Remove</button>
                             </form>
+                            <button class="btn btn-outline-warning" onclick="new_submit('delete', '/client/load')">Remove</button>
                             <div class="btn-group dropright">
 
                                     <button type="button" class="btn btn-primary">
@@ -90,17 +83,18 @@
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                         {% for key, sale in sales.iteritems() %}
-                                        <a class="dropdown-item"
-                                           href="/client/load?dropzone={{dropzone.key.id()}}&to_sale={{key}}&action=change_sale">{{sale.details.name}}</a>
+                                        <form  method="post" id="change_sales_{{key}}">
+                                            <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+                                            <input type="hidden" name="load" value="{{load.key.id()}}">
+                                            <input type="hidden" name="action" value="change_sales">
+                                        </form>
+                                        <button class="dropdown-item" onclick="new_submit('change_sales_{{key}}', '/client/load')">{{sale.details.name}}</button>
                                         {% endfor %}
                                     </div>
-
                             </div>
-
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
     </table>
 </div>
-{% endblock %}

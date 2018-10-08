@@ -1,33 +1,40 @@
-{% extends "client.html" %}
+{% for dropzones in reg_mega %}
+{% set registration = dropzones[0] %}
+{% set dropzone = dropzones[1] %}
 
-{% block title %}
-    Client Dz List
-{% endblock %}
+    <div class="card">
+        <div class="card-body bg-primary text-white">
+            <div class="row ">
+                <h3 class="col-6 ">
+                    <span class="badge badge-primary">
+                    {{dropzone.name}}
+                    </span>
+                </h3>
+                <div class="col-2">
+                    <ul style="list-style-type:none">
+                        <li>
+                            <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
+                            {{dropzone_status[dropzone.status]}} </span>
+                        </li>
+                        <li>
+                            <button class="badge badge-success p-1" onclick="main_set('/client/manifest?dropzone={{dropzone.key.id()}}','nav-1')" >Manifest</button>
+                        </li>
 
+                    </ul>
+                </div>
+                <div class="col-2">
+                    <ul style="list-style-type:none">
+                        <li>
+                            <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
+                        </li>
+                        <li>
+                            <button class="badge badge-success p-1" onclick="main_set('/client/account?dropzone={{dropzone.key.id()}}', 'nav-1')" >Account</button>
+                        </li>
+                    </ul>
+                </div>
 
-{% block main %}
-    {% for dropzones in reg_mega %}
-        {% set registration = dropzones[0] %}
-        {% set dropzone = dropzones[1] %}
-        <a href="{{url}}?dropzone={{dropzone.key.id()}}">
-        <div class="card">
-            <div class="card-body bg-primary text-white">
-                <div class="row ">
-                    <h3 class="col-6 ">
-                        <span class="badge badge-primary">
-                        {{dropzone.name}}
-                        </span>
-                    </h3>
-                    <div class="col-2">
-                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
-                        {{dropzone_status[dropzone.status]}} </span>
-                    </div>
-                    <div class="col-4">
-                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
-                    </div>
                 </div>
             </div>
         </div>
-        </a>
+
     {% endfor %}
-{% endblock %}

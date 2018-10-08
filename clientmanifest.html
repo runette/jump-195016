@@ -1,12 +1,7 @@
-{% extends "client.html" %}
-
-{% block title %}
-    Client Dz List
-{% endblock %}
 
 
-{% block main %}
-<a href="/client">
+
+<a onclick="main_set('/client_dz','nav-1')">
         <div class="card">
             <div class="card-body bd-gray">
                 <div class="row ">
@@ -28,7 +23,7 @@
 </a>
 
 {% for load in loads %}
-<a href="/client/load?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}">
+<a onclick="main_set('/client/load?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}', 'nav-1')">
 <div class="card">
         <div class="card-body bg-primary text-white">
             <div class="row justify-content-between">
@@ -54,4 +49,3 @@
 </div>
 </a>
 {% endfor %}
-{% endblock %}

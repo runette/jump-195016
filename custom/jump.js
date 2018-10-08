@@ -22,7 +22,52 @@ function google_init() {
         });
 }
 
+function main_set(url, active){
+        let navs = $('.nav-link');
+        for (let i in navs) {
+            let nav = navs[i];
+            try {
+            nav.classList.remove('active');
+            }
+            catch (err){
 
+            }
+        }
+        let nav = $('#' + active)[0];
+        try {
+            nav.classList.add('active');
+        }
+        catch (err){
+                alert(err)
+        }
+        $('.collapse').collapse('hide');
+        main_post(url)
+}
+
+function main_post(url){
+    let main_block  = $('#main_block');
+    main_block[0].dataset.source = url;
+    let xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            if (this.responseText != '') {
+                let response = (this.responseText);
+                $('#main_block')[0].innerHTML = response;
+                }
+                else {
+                }
+            }
+        };
+    xhttp.open("POST", url, true);
+    xhttp.setRequestHeader('Content-Type',"application/x-www-form-urlencoded");
+    xhttp.send("");
+}
+
+function main_refresh(){
+    let main_block  = $('#main_block');
+    let url = main_block[0].dataset.source;
+    main_post(url)
+}
 
     $('.form_datetime').datetimepicker({
         //language:  'en',

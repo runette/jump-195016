@@ -1,3 +1,15 @@
+{% if message %}
+
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">{{message.title}}</h5>
+    <p class="card-text">{{message.body}}</p>
+    <a href="#" class="card-link" onclick="main_set('/client_dz','nav-1')">Back</a>
+  </div>
+</div>
+
+{% else %}
+
 {% for dropzones in reg_mega %}
 {% set registration = dropzones[0] %}
 {% set dropzone = dropzones[1] %}
@@ -38,3 +50,4 @@
         </div>
 
     {% endfor %}
+{% endif %}

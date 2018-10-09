@@ -1,5 +1,15 @@
 
+{% if message %}
 
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">{{message.title}}</h5>
+    <p class="card-text">{{message.body}}</p>
+    <a href="#" class="card-link" onclick=onclick="main_set('/client_dz','nav-1')">Back</a>
+  </div>
+</div>
+
+{% else %}
 
 <a onclick="main_set('/client_dz','nav-1')">
     <div class="card">
@@ -57,3 +67,4 @@
 </div>
 </a>
 {% endfor %}
+{% endif %}

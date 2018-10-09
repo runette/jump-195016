@@ -19,10 +19,10 @@
                             {{log.dropzone}}
                         </td>
                         <td scope="col-3">
-                            {{log.date}}
+                            {{log.date.strftime("%d/%m/%y")}}
                         </td>
                         <td scope="col-3">
-                            {{log.time}}
+                            {{log.time.strftime("%H:%M")}}
                         </td>
                     </tr>
                     {% endfor %}

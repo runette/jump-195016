@@ -7,13 +7,21 @@
                         {{dropzone.name}}
                         </span>
                     </h3>
-                    <div class="col-3 ">
-                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
-                    </div>
-                    <div class="col-3 ">
-                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
+                    <div class="col-3">
+                <tr>
+                    <td>
+                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} ">
                         {{dropzone_status[dropzone.status]}} </span>
-                    </div>
+                    </td>
+                </tr>
+            </div>
+            <div class="col-3">
+                <tr>
+                    <td>
+                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} '> {{registration_status[registration.current]}} </span>
+                    </td>
+                </tr>
+            </div>
                 </div>
             </div>
         </div>

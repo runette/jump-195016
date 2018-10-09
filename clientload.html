@@ -3,35 +3,48 @@
         <div class="card">
             <div class="card-body ">
                 <div class="row ">
-                    <h3 class="col-6 ">
-                        <span class="badge badge-primary">
-                        {{dropzone.name}}
-                        </span>
-                    </h3>
-
-                    <div class="col-3 ">
-                        <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
+                    <div class="col-6">
+                        <h3>
+                            <span class="badge badge-primary">
+                            {{dropzone.name}}
+                            </span>
+                        </h3>
+                        <h4 class='col-6'> <span class="badge badge-primary">Load {{load.number}}</span> </h4>
                     </div>
-                    <div class="col-3 ">
-                        <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
-                        {{dropzone_status[dropzone.status]}} </span>
+                    <div class="col-3">
+                        <tr>
+                            <td>
+                                <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} ">
+                                {{dropzone_status[dropzone.status]}} </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary">{{load.time.strftime("%H:%M")}} </span>
+                            </td>
+                            <td><span class="badge badge-secondary">Free : {{ slotsize[load.key.id()] }}</span></td>
+                        </tr>
                     </div>
-                </div>
-                <div class="row">
-            <h3 class='col-6'> <span class="badge badge-primary">Load {{load.number}}</span> </h3>
-            <div class="col-3"> <span class="badge badge-secondary">{{load.time.strftime("%H:%M")}} </span></div>
-            <div class="col-3"><span class=" badge {{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">{{load_status[load.status]}}</span></div>
-        </div>
-        <div class="row">
-            <div class="col-6"><span class="badge badge-secondary">Free Slots : {{ slotsize[load.key.id()] }}</span></div>
-            <div class="col-6">
-                <form id="manifest"method="post">
+                    <div class="col-3">
+                        <tr>
+                            <td>
+                                <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} '> {{registration_status[registration.current]}} </span>
+                            </td>
+                            <td>
+                                <span class=" badge {{load_colours[load.status][0]}} {{load_colours[load.status][1]}} p-1">{{load_status[load.status]}}</span>
+                            </td>
+                            <td>
+                                <form id="manifest"method="post">
                         <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
                         <input type="hidden" name="load" value="{{load.key.id()}}">
                         <input type="hidden" name="action" value="add">
                 </form>
-                <button class="btn btn-outline-warning" onclick="new_submit('manifest', '/client/load')">Manifest</button>
-            </div>
+                <button class="badge badge-outline-success" onclick="new_submit('manifest', '/client/load')">Manifest</button>
+                            </td>
+                        </tr>
+                    </div>
+                </div>
+
+
+
         </div>
             </div>
         </div>

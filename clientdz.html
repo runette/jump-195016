@@ -10,27 +10,27 @@
                     {{dropzone.name}}
                     </span>
                 </h3>
-                <div class="col-2">
-                    <ul style="list-style-type:none">
-                        <li>
-                            <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} p-1">
+                <div class="col-3">
+                    <tr>
+                        <td>
+                            <span class="badge {% if dropzone.status == 0 %}badge-success   {% else %}badge-warning {% endif %} ">
                             {{dropzone_status[dropzone.status]}} </span>
-                        </li>
-                        <li>
-                            <button class="badge badge-success p-1" onclick="main_set('/client/manifest?dropzone={{dropzone.key.id()}}','nav-1')" >Manifest</button>
-                        </li>
+                        </td>
+                        <td>
+                            <button class="badge badge-success " onclick="main_set('/client/manifest?dropzone={{dropzone.key.id()}}','nav-1')" >Manifest</button>
+                        </td>
 
-                    </ul>
+                    </tr>
                 </div>
-                <div class="col-2">
-                    <ul style="list-style-type:none">
-                        <li>
-                            <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} p-1 '> {{registration_status[registration.current]}} </span>
-                        </li>
-                        <li>
-                            <button class="badge badge-success p-1" onclick="main_set('/client/account?dropzone={{dropzone.key.id()}}', 'nav-1')" >Account</button>
-                        </li>
-                    </ul>
+                <div class="col-3">
+                    <tr>
+                        <td>
+                            <span class='badge {{registration_colours[registration.current][0]}} {{ registration_colours[registration.current][1]}} '> {{registration_status[registration.current]}} </span>
+                        </td>
+                        <td>
+                            <button class="badge badge-success " onclick="main_set('/client/account?dropzone={{dropzone.key.id()}}', 'nav-1')" >Account</button>
+                        </td>
+                    </tr>
                 </div>
 
                 </div>

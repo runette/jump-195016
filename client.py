@@ -231,3 +231,28 @@ class ClientAccount(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('clientaccount.html')
         self.response.write(template.render(template_values))
         return
+
+class ClientLogbook(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            rm = RegMega(user)
+            jumper = Jumper.get_by_id(rm.jumper)
+            jumper_key = jumper.key.id()
+            logbook = Log(jumper_key)
+            template_values = {
+                'user_data': user_data,
+                'active': 2,
+                'logbook': logbook.logbook,
+            }
+        else:
+            dropzone = DEFAULT_DROPZONE
+            template_values = {
+                'user_data': user_data,
+                'active': 2,
+            }
+        template = JINJA_ENVIRONMENT.get_template('clientlogbook.html')
+        self.response.write(template.render(template_values))
+        return
+

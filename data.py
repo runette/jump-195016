@@ -121,6 +121,10 @@ class Manifest(ndb.Model):
         used = cls.get_by_sale(sale_key)
         return len(used)
 
+    @classmethod
+    def get_by_jumper(cls, jumper_key):
+        return cls.query(Manifest.jumper == jumper_key).fetch()
+
 
 
 class User(ndb.Model):
@@ -629,4 +633,53 @@ class SalesMega:
             self.refresh()
             return
         manifest.put()
+        return
+
+class Log:
+    logbook = []
+
+    def __init__(self, jumper_key):
+        self.key = str(jumper_key)
+        client = memcache.Client()
+        content = client.get(self.key)
+        if content:
+            self.logbook = content
+        else:
+            self.refresh()
+        return
+
+    def refresh(self):
+        self.logbook = []
+        manifests = Manifest.get_by_jumper(long(self.key))
+        for manifest in manifests:
+            load = Load.get_by_id(manifest.load)
+            dropzone = Dropzone.get_by_id(load.dropzone)
+            log = {
+                'date': load.date,
+                'time': load.time,
+                'dropzone': dropzone.name,
+            }
+            self.logbook.append(log)
+        self.sort()
+        self.save()
+        return
+
+
+
+    def save(self):
+        client = memcache.Client()
+        while True:  # Retry loop
+            content = client.gets(self.key)
+            if content is None:
+                memcache.set(self.key, self.logbook, time=1000)
+                break
+            if client.cas(self.key, self.logbook, time=1000):
+                break
+        return
+
+    def sort(self):
+        def sort_key(item):
+            date = datetime.datetime.combine(item['date'], item['time'])
+            return date
+        self.logbook.sort(key=sort_key)
         return

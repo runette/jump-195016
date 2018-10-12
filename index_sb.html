@@ -1,0 +1,10 @@
+{% if dropzone.status != -1 %}
+<div class="row">
+    <a class="btn btn-primary btn-block text-white mb-1" onclick="main_post('/startday?dropzone={{dropzone.key.id()}}')"
+       role="button"> Start the Day </a>
+</div>
+<div class="row">
+    <a class="btn btn-primary btn-block text-white mb-1"  onclick="main_post('/endday?dropzone={{dropzone.key.id()}}')"
+       role="button"> End the Day </a>
+</div>
+{% endif %}

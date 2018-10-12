@@ -18,6 +18,8 @@
 
 import webapp2
 
+import logging
+
 import datetime
 from data import *
 
@@ -48,13 +50,33 @@ class MainPage(webapp2.RequestHandler):
             'active': 0,
             'dropzone_status': DROPZONE_STATUS
         }
+        template = JINJA_ENVIRONMENT.get_template('manage.html')
+        self.response.write(template.render(template_values))
+        return
+
+class MainIndex(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            # Get the dropzone details based on the user
+            dropzone_key = User.get_user(user.email()).dropzone
+            dropzone = Dropzone.get_by_id(dropzone_key)
+        else:
+            dropzone = DEFAULT_DROPZONE
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
+        }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
         return
 
 #Handles Start of Day actions and returns to the index page
 class StartDay(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
         message = {}
@@ -68,27 +90,19 @@ class StartDay(webapp2.RequestHandler):
             if len(ls.loads) is 0 :
                 for i in range(dropzone.default_load_number):
                     ls.add_load()
-        elif dropzone.status == OPEN:
-            message.update({'title': "Already Open"})
-            message.update(({'body': "The dropzone is already open"}))
-        else:
-            message.update({'title': "Problem"})
-            message.update(({'body': "Something went wrong"}))
-
         template_values = {
             'user_data': user_data,
             'dropzone': dropzone,
             'active': 0,
-            'dropzone_status': DROPZONE_STATUS,
-            'message': message,
-
+            'dropzone_status': DROPZONE_STATUS
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
+        return
 
 #Handles end of day actions and returns to the main page
 class EndDay(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         user = user_data['user']
         # change status to closed and delete all loads that did not take off
@@ -96,14 +110,13 @@ class EndDay(webapp2.RequestHandler):
             dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
             dropzone = Dropzone.get_by_id(dropzone_key)
             dropzone.status = CLOSED
-            loads = Load.get_loads(dropzone_key).fetch()
+            ls = LoadStructure(dropzone_key)
+            for load in ls.loads:
+                if load.status in [WAITING, HOLD]:
+                    ls.delete_load(load)
         else:
             dropzone = Dropzone.get_by_id(DEFAULT_DROPZONE_ID)
-            loads = []
-        for load in loads:
-            if load.status in [WAITING, HOLD]:
-                ls=LoadStructure(dropzone_key)
-                ls.delete_load(load)
+
         Dropzone.put(dropzone)
         template_values = {
             'user_data': user_data,
@@ -113,10 +126,11 @@ class EndDay(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
+        return
 
 
 class ManageSales(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         message = {}
         sales = {}
@@ -152,6 +166,7 @@ class ManageSales(webapp2.RequestHandler):
                 message.update({'title': "Cannot Sales"})
                 message.update(
                     {'body': "You do not have Sales rights "})
+                logging.log(logging.ERROR, message['body'])
         dropzone = DEFAULT_DROPZONE
         template_values = {
             'user_data': user_data,
@@ -165,7 +180,7 @@ class ManageSales(webapp2.RequestHandler):
 
 
 class ManageLoads(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         dropzone_key = int(self.request.get('dropzone'))
         dropzone = Dropzone.get_by_id(dropzone_key)
@@ -207,6 +222,7 @@ class ManageLoads(webapp2.RequestHandler):
                 message.update({'title': "Cannot Manifest"})
                 message.update(
                     {'body': "You do not have Manifest rights "})
+                logging.log(logging.ERROR, message['body'])
 
             # refresh loads
             loads = load_struct.loads
@@ -236,7 +252,7 @@ class ManageLoads(webapp2.RequestHandler):
 
 
 class ManageManifest(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         if user_data['user']:
             # GET PARAMETERS
@@ -258,6 +274,7 @@ class ManageManifest(webapp2.RequestHandler):
                 message.update({'title': "Cannot Manifest"})
                 message.update(
                     {'body': "You do not have Manifest rights "})
+                logging.log(logging.ERROR, message['body'])
             #Refresh the Manifests
             slot_mega = load_struct.slot_mega
             slot_size = load_struct.freeslots()
@@ -289,7 +306,7 @@ class ManageManifest(webapp2.RequestHandler):
 
 
 class ManageJumpers(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         if user_data['user']:
             # GET PARAMETERS
@@ -311,12 +328,14 @@ class ManageJumpers(webapp2.RequestHandler):
                         if registration:
                             message.update({'title': "Double Registration"})
                             message.update({'body': " Cannot register a jumper twice"})
+                            logging.log(logging.ERROR, message['body'])
                         else:
                             js.add(jumper_key)
                     else:
                         message.update({'title': "Invalid Jumper"})
                         message.update(
                             {'body': "No Jumper registered with this email"})
+                        logging.log(logging.ERROR, message['body'])
 
                 if delete == "yes":
                     registration = Registration.get_by_jumper(dropzone_key, jumper_key).get()
@@ -325,6 +344,7 @@ class ManageJumpers(webapp2.RequestHandler):
                     else:
                         message.update({'title': "Current Jumper"})
                         message.update({'body': "Cannot delete a current jumper. Make them uncurrent first"})
+                        logging.log(logging.ERROR, message['body'])
 
                 elif action == "update":
                     js.update(jumper_key,
@@ -335,6 +355,7 @@ class ManageJumpers(webapp2.RequestHandler):
                 message.update({'title': "Cannot Registration"})
                 message.update(
                     {'body': "You do not have Registration rights "})
+                logging.log(logging.ERROR, message['body'])
 
             # refresh registrations
             registrations = Registration.get_by_dropzone(dropzone_key).fetch()
@@ -361,7 +382,7 @@ class ManageJumpers(webapp2.RequestHandler):
 
 
 class ManageDz(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         if user_data['user']:
             user = User.get_user(user_data['user'].email())
@@ -424,7 +445,21 @@ class UpdateDz(webapp2.RequestHandler):
             dropzone.default_load_time = int(self.request.get('default_load_time'))
             dropzone.tag = self.request.get('dropzone_tag')
             dropzone.put()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=dz')
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'users': User.get_by_dropzone(dropzone_key).fetch(),
+            'user_roles': USER_ROLES,
+            'role_colours': ROLE_COLOURS,
+            'active': 4,
+            'dropzone_status': DROPZONE_STATUS,
+            'packages': SalesPackage.get_by_dropzone(dropzone_key),
+            'request': self.request.application_url,
+
+        }
+        template = JINJA_ENVIRONMENT.get_template('configuredz.html')
+        self.response.write(template.render(template_values))
+        return
 
 
 class UpdateUser(webapp2.RequestHandler):
@@ -432,6 +467,7 @@ class UpdateUser(webapp2.RequestHandler):
         user_data = UserStatus(self.request.uri)
         user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
+        dropzone=Dropzone.get_by_id(dropzone_key)
         action = self.request.get('action')
         user_key = int(self.request.get('user', '-1'))
         if user.role == ADMIN:
@@ -443,8 +479,7 @@ class UpdateUser(webapp2.RequestHandler):
                     user_update.dropzone = dropzone_key
                     user_update.put()
             if action == "add":
-                name = self.request.get('user_email') + "@gmail.com"
-                user_update = User.get_user(name)
+                name = 'new_user' + "@gmail.com"
                 user_update = User(
                         name=name,
                         dropzone=dropzone_key,
@@ -455,7 +490,21 @@ class UpdateUser(webapp2.RequestHandler):
                 user_update = User.get_by_id(user_key)
                 if user_update:
                     user_update.key.delete()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=user')
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'users': User.get_by_dropzone(dropzone_key).fetch(),
+            'user_roles': USER_ROLES,
+            'role_colours': ROLE_COLOURS,
+            'active': 4,
+            'dropzone_status': DROPZONE_STATUS,
+            'packages': SalesPackage.get_by_dropzone(dropzone_key),
+            'request': self.request.application_url,
+
+        }
+        template = JINJA_ENVIRONMENT.get_template('configureuser.html')
+        self.response.write(template.render(template_values))
+        return
 
 
 class UpdateSales(webapp2.RequestHandler):
@@ -463,6 +512,7 @@ class UpdateSales(webapp2.RequestHandler):
         user_data = UserStatus(self.request.uri)
         user = User.get_user(user_data['user'].email())
         dropzone_key = int(self.request.get('dropzone'))
+        dropzone = Dropzone.get_by_id(dropzone_key)
         action = self.request.get('action')
         package_key = int(self.request.get('package', '-1'))
         if user.role == ADMIN:
@@ -475,7 +525,7 @@ class UpdateSales(webapp2.RequestHandler):
                     package.put()
             if action == "add":
                 package = SalesPackage(
-                    name=self.request.get('sales_name'),
+                    name='new_package',
                     dropzone=dropzone_key,
                     size=0
                 )
@@ -484,7 +534,21 @@ class UpdateSales(webapp2.RequestHandler):
                 package = SalesPackage.get_by_id(package_key)
                 if package:
                     package.key.delete()
-        self.redirect('/configdz?dropzone=' + str(dropzone_key) + '&action=sales')
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'users': User.get_by_dropzone(dropzone_key).fetch(),
+            'user_roles': USER_ROLES,
+            'role_colours': ROLE_COLOURS,
+            'active': 4,
+            'dropzone_status': DROPZONE_STATUS,
+            'packages': SalesPackage.get_by_dropzone(dropzone_key),
+            'request': self.request.application_url,
+
+        }
+        template = JINJA_ENVIRONMENT.get_template('configuresales.html')
+        self.response.write(template.render(template_values))
+        return
 
 class RetimeLoads(webapp2.RequestHandler):
     def get(self):
@@ -508,6 +572,7 @@ class RetimeLoads(webapp2.RequestHandler):
             message.update({'title': "Cannot Manifest"})
             message.update(
                 {'body': "You do not have Manifest rights "})
+            logging.log(logging.ERROR, message['body'])
 
         # refresh loads
         load_struct = LoadStructure(dropzone_key)
@@ -547,4 +612,36 @@ class NewDz(webapp2.RequestHandler):
         user.put()
         self.redirect('/configdz?dropzone=' + str(dropzone.key.id()) + '&action=dz')
 
-
+class SideBar(webapp2.RequestHandler):
+    def post(self):
+        user_data = UserStatus(self.request.uri)
+        user = user_data['user']
+        if user:
+            # Get the dropzone details based on the user
+            dropzone_key = User.get_user(user.email()).dropzone
+            dropzone = Dropzone.get_by_id(dropzone_key)
+        else:
+            dropzone = DEFAULT_DROPZONE
+        side_bar = self.request.get('side_bar')
+        case_type = {
+            'index':'index_sb.html',
+            'load':'load_sb.html',
+            'jumper':'jumpers_sb.html',
+            'configuredz': 'configuredz_sb.html',
+            'sales' : 'sales_sb.html',
+            'users': 'users_sb.html',
+            'none': 'none.html',
+        }
+        if side_bar in case_type:
+            response = case_type[side_bar]
+        else:
+            return
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
+        }
+        template = JINJA_ENVIRONMENT.get_template(response)
+        self.response.write(template.render(template_values))
+        return

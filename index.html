@@ -1,18 +1,4 @@
-{% extends "manage.html" %}
-{% block title %}
-Jump MainPage
-{% endblock %}
 
-{% block sidebar %}
-{% if dropzone.status != -1 %}
-<a class="list-group-item list-group-item-action bg-primary text-white" href="/startday?dropzone={{dropzone.key.id()}}"
-   role="button"> Start the Day </a>
-<a class="list-group-item list-group-item-action bg-primary text-white" href="/endday?dropzone={{dropzone.key.id()}}"
-   role="button"> End the Day </a>
-{% endif %}
-{% endblock %}}
-
-{% block main %}
 <div class="jumbotron jumbotron-fluid">
     <div >
         {% if dropzone.status != -1 %}
@@ -25,4 +11,4 @@ Jump MainPage
         {% endif %}
     </div>
 </div>
-{% endblock %}
+

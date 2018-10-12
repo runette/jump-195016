@@ -1,21 +1,9 @@
-{% extends "manage.html" %}
-{% block title %}
-Manage DZ Configurations
-{% endblock %}
-
-{% block sidebar %}
-<form action="/newdz" method="post">
-    <button class='btn btn-primary' name="New Dropzone" type="submit">New Dropzone</button>
-</form>
-{% endblock %}
 
 {% if dropzone.key.id != None %}
-
-{% block main %}
 <div class="row">
     <div class="col-12">
                         <h1>Dropzone Configuration</h1>
-        <form action="/updatedz?dropzone={{dropzone.key.id()}}" method="post">
+        <form id="config">
             <div class="form-group row">
                 <label for="dropzone_name" class="col-4 col-form-label">
                     Dropzone Name
@@ -23,7 +11,7 @@ Manage DZ Configurations
                 <div class="col-8">
                     <input id="dropzone_name" name="dropzone_name" type="text"
                            required="required"
-                           class="form-control here" value="{{dropzone.name}}">
+                           class="form-control here" value="{{dropzone.name}}" onchange="new_submit('config', '/updatedz?dropzone={{dropzone.key.id()}}')">
                 </div>
             </div>
             <div class="form-group row">
@@ -31,7 +19,7 @@ Manage DZ Configurations
                     Dropzone Tag Line
                 </label>
                 <div class="col-8">
-                    <input id="dropzone_tag" name="dropzone_tag" type="text" class="form-control here"
+                    <input id="dropzone_tag" name="dropzone_tag" type="text" class="form-control here" onchange="new_submit('config', '/updatedz?dropzone={{dropzone.key.id()}}')"
                            value="{{dropzone.tag}}">
                 </div>
             </div>
@@ -43,7 +31,7 @@ Manage DZ Configurations
                     <div class="input-group">
                         <input id="default_slot_number" name="default_slot_number"
                                value="{{dropzone.default_slot_number}}" type="text" required="required"
-                               class="form-control here">
+                               class="form-control here" onchange="new_submit('config', '/updatedz?dropzone={{dropzone.key.id()}}')">
                         <div class="input-group-append">
                                         <span class="input-group-text">
                                             slots per load
@@ -58,7 +46,7 @@ Manage DZ Configurations
                     <div class="input-group">
                         <input id="default_load_number" name="default_load_number"
                                value="{{dropzone.default_load_number}}" type="text"
-                               aria-describedby="default_load_numberHelpBlock" class="form-control here">
+                               aria-describedby="default_load_numberHelpBlock" class="form-control here" onchange="new_submit('config', '/updatedz?dropzone={{dropzone.key.id()}}')">
                         <div class="input-group-append">
                                             <span class="input-group-text">
                                               Loads
@@ -75,7 +63,7 @@ Manage DZ Configurations
                 <div class="col-8">
                     <div class="input-group">
                         <input id="default_load_time" name="default_load_time"
-                               value="{{dropzone.default_load_time}}" type="text"
+                               value="{{dropzone.default_load_time}}" type="text" onchange="new_submit('config', '/updatedz?dropzone={{dropzone.key.id()}}')"
                                aria-describedby="default_load_timeHelpBlock" class="form-control here">
                         <div class="input-group-append">
                                             <span class="input-group-text">
@@ -87,15 +75,8 @@ Manage DZ Configurations
                           class="form-text text-muted">Time interval between loads</span>
                 </div>
             </div>
-            <div class="form-group row">
-                <div class="offset-4 col-8">
-                    <button name="submit" type="submit" class="btn btn-primary">
-                        Submit
-                    </button>
-                </div>
-            </div>
+
         </form>
                     </div>
                 </div>
-{% endblock %}
 {% endif %}

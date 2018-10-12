@@ -6,6 +6,7 @@ from client import *
 
 app = webapp2.WSGIApplication([
     webapp2.Route ('/', handler= MainPage),
+    webapp2.Route ('/index', handler=MainIndex),
     webapp2.Route ('/manage', handler=MainPage),
     webapp2.Route ('/loads', handler=ManageLoads),
     webapp2.Route ('/startday', handler=StartDay),
@@ -30,5 +31,6 @@ app = webapp2.WSGIApplication([
     webapp2.Route ('/client/config', handler=ClientConfig),
     webapp2.Route ('/client/load', handler=ClientLoads),
     webapp2.Route ('/client/logbook', handler=ClientLogbook),
+    webapp2.Route ('/sidebar', handler=SideBar)
 ], debug=True)
 

@@ -1,16 +1,8 @@
-{% extends "manage.html" %}
-{% block title %}
-Manage DZ Configurations
-{% endblock %}
-
-{% block sidebar %}
-
-{% endblock %}
 
 
-{% block main %}
+
 <h1>Kiosk Configuration</h1>
-<form action="/kiosk/update" method="post">
+<form  id="config" method="post">
     <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}"/>
     <div class="form-group row ">
         <label class="control-label requiredField col-4" for="cols">
@@ -19,7 +11,7 @@ Manage DZ Configurations
                     *
                 </span>
         </label>
-        <input class="form-control here col-4" id="cols" name="cols" type="text" value="{{dropzone.kiosk_cols}}"/>
+        <input class="form-control here col-4" id="cols" name="cols" type="text" value="{{dropzone.kiosk_cols}}" onchange="new_submit('config', '/kiosk/update')"/>
     </div>
     <div class="form-group row">
         <label class="control-label requiredField col-4" for="rows">
@@ -28,7 +20,7 @@ Manage DZ Configurations
                     *
                 </span>
         </label>
-        <input class="form-control here col-4" id="rows" name="rows" type="text" value="{{dropzone.kiosk_rows}}"/>
+        <input class="form-control here col-4" id="rows" name="rows" type="text" value="{{dropzone.kiosk_rows}}" onchange="new_submit('config', '/kiosk/update')"/>
     </div>
     <div class="form-group row">
         <label class="control-label col-sm-2" for="url">Kiosk URL:</label>
@@ -43,12 +35,4 @@ Manage DZ Configurations
             </small>
         </div>
     </div>
-    <div class="form-group">
-        <div>
-            <button class="btn btn-primary " name="submit" type="submit">
-                Submit
-            </button>
-        </div>
-    </div>
 </form>
-{% endblock %}

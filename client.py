@@ -43,7 +43,7 @@ class Client (webapp2.RequestHandler):
             'message': message,
 
         }
-        template = JINJA_ENVIRONMENT.get_template('client.html')
+        template = JINJA_ENVIRONMENT.get_template('/html/client.html')
         self.response.write(template.render(template_values))
 
     def post(self):

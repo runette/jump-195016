@@ -15,7 +15,15 @@
 <script type="text/javascript">
         $(function () {
             $('[data-toggle="popover"]').popover();
-            google_init()
+        });
+        $(function() {
+            google_init();
+        });
+        $(function () {
+            side_set('/index','/sidebar?side_bar=index', 'nav-1');
+        });
+        $(function () {
+            let myTimer = setInterval(main_refresh,10000)
         })
     </script>
 {% endblock %}
@@ -24,14 +32,15 @@
 {% block main_exist %}
     {% if user %}
     {% block sidebar_exist %}
-        <div class="col-3  bd-sidebar" data-spy="affix" data-offset-top="205">
+        <div class="col-3  bd-sidebar px-4" id="side_bar" data-spy="affix" data-offset-top="205">
             <div class="list-group">
-                {% block sidebar %}{% endblock %}
             </div>
         </div>
     {% endblock %}
-    <main class="col-9 m-0">
-        {% block main %}{% endblock %}
+<script type="text/javascript">
+
+</script>
+    <main class="col-9 m-0" id="main_block">
     </main>
     {% endif %}
 {% endblock %}

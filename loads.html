@@ -1,10 +1,4 @@
 {% extends "twolist.html" %}
-{% block title %} Load Management Screen {% endblock %}
-{% block sidebar %}
-<a class="list-group-item list-group-item-action bg-primary text-white"
-   href="/loadaction?dropzone={{dropzone.key.id()}}&load=-1&action=add" role="button"
-   xmlns="http://www.w3.org/1999/html"> Add a Load</a>
-{% endblock %}}
 
 {% block heading %}
 Today's Manifest
@@ -39,21 +33,21 @@ Today's Manifest
         </button>
         <div class="dropdown-menu" aria-labelledby="MenuButton{{load.number}}">
             <a class="dropdown-item"
-               href="/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=takeoff">Take Off</a>
+               onclick="post_data('/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=takeoff')">Take Off</a>
             <a class="dropdown-item"
-               href="/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=landed">Landed</a>
+               onclick="post_data('/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=landed')">Landed</a>
             <a class="dropdown-item"
-               href="/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=hold">Hold Load</a>
+               onclick="post_data('/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=hold')">Hold Load</a>
             <a class="dropdown-item"
-               href="/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=delete">Delete</a>
-            <a class="dropdown-item" href="/manifest?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}">Manifest</a>
+               onclick="post_data('post/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=delete')">Delete</a>
+            <a class="dropdown-item" onclick="post_data('/manifest?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}')">Manifest</a>
         </div>
     </div>
     {% if load.status in (0,2) %}
     <a role="button" class="btn btn-info"
-       href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=5">+5</a>
+       onclick="post_data('/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=5')">+5</a>
     <a role="button" class="btn btn-warning"
-       href="/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=10">+10</a>
+       onclick="post_data('/retime?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=10')">+10</a>
     <button type="button" class="btn btn-secondary" data-html='true' data-toggle="popover"
             title="Set Load Time" data-content='
                             <form action="/retime" method="get">

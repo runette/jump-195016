@@ -1,0 +1,6 @@
+{% if dropzone.status != -1 %}
+<div class="row">
+    <a class="btn btn-primary btn-block text-white mb-1" onclick="main_post('/loadaction?dropzone={{dropzone.key.id()}}&load=-1&action=add')"
+       role="button"> Add a Load </a>
+</div>
+{% endif %}

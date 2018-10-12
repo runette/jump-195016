@@ -1,0 +1,15 @@
+<a class="btn btn-primary btn-block text-white mb-1" id="new_sales" role="button" onclick="new_submit('new-jumper','/jumpers')"> Add Jumper
+</a>
+
+<form id="new-jumper">
+    <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}">
+    <input type="hidden" name="action" value="add">
+    <div class="col-8 input-group">
+        <input type="text" name="email" class="form-control col-8" required="required">
+        <span class="input-group-append col-4">
+            <span class="input-group-text">
+                @gmail.com
+            </span>
+        </span>
+    </div>
+</form>

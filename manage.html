@@ -4,36 +4,36 @@
 {% block navbar_left %}
 {% if dropzone.status != -1 %}
             <ul class="navbar-nav">
-            <li class="nav-item {% if active == 0 %}active {% endif %}">
-                <a class="nav-link" href="/manage">Home</a>
+            <li class="nav-item " >
+                <a class="nav-link" id="nav-1" onclick="side_set('/index','/sidebar?side_bar=index','nav-1', false)">Home</a>
             </li>
             {% if dropzone.status != -1 %}
-            <li class="nav-item {% if active == 1 %}active {% endif %}">
-                <a class="nav-link" href="/loads?dropzone={{dropzone.key.id()}}">Loads</a>
+            <li class="nav-item " >
+                <a class="nav-link" id="nav-2" onclick="side_set('/loads?dropzone={{dropzone.key.id()}}', '/sidebar?side_bar=load','nav-2', true)">Loads</a>
             </li>
-            <li class="nav-item {% if active == 3 %}active {% endif %}">
-                <a class="nav-link" href="/jumpers?dropzone={{dropzone.key.id()}}">Jumpers</a>
+            <li class="nav-item " >
+                <a class="nav-link" id="nav-3" onclick="side_set('/jumpers?dropzone={{dropzone.key.id()}}', '/sidebar?side_bar=jumper','nav-3', false)">Jumpers</a>
             </li>
-            <li class="nav-item {% if active == 4 %}active {% endif %}">
+            <li class="nav-item " >
                 <div class="dropdown">
-                    <a class="nav-link dropdown-toggle" role="button" id="ConfigMenuButton" data-toggle="dropdown"
+                    <a class="nav-link dropdown-toggle" id="nav-4" role="button" id="ConfigMenuButton" data-toggle="dropdown"
                        aria-haspopup="true" aria-expanded="false">
                         Configure
                     </a>
                     <div class="dropdown-menu" aria-labelledby="ConfigMenuButton">
-                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=dz">Dropzone
+                        <a class="dropdown-item" onclick="side_set('/configdz?dropzone={{dropzone.key.id()}}&action=dz', '/sidebar?side_bar=configuredz','nav-4', false)">Dropzone
                             Config</a>
-                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=user">User
+                        <a class="dropdown-item" onclick="side_set('/configdz?dropzone={{dropzone.key.id()}}&action=user', '/sidebar?side_bar=users','nav-4', false)">User
                             Config</a>
-                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=sales">Sales
+                        <a class="dropdown-item" onclick="side_set('/configdz?dropzone={{dropzone.key.id()}}&action=sales', '/sidebar?side_bar=sales','nav-4', false)">Sales
                             Config</a>
-                        <a class="dropdown-item" href="/configdz?dropzone={{dropzone.key.id()}}&action=kiosk">Kiosk
+                        <a class="dropdown-item" onclick="side_set('/configdz?dropzone={{dropzone.key.id()}}&action=kiosk', '/sidebar?side_bar=none','nav-4', false)">Kiosk
                             Config</a>
                     </div>
                 </div>
             </li>
             {% endif %}
-            <li class="nav-item {% if active == 3 %}active {% endif %}">
+            <li class="nav-item " id="nav-5">
                 <a class="nav-link" href="/help">Help</a>
             </li>
         </ul>

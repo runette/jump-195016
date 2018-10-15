@@ -551,7 +551,7 @@ class UpdateSales(webapp2.RequestHandler):
         return
 
 class RetimeLoads(webapp2.RequestHandler):
-    def get(self):
+    def post(self):
         user_data = UserStatus(self.request.uri)
         user = User.get_user(user_data['user'].email())
         message = {}
@@ -620,6 +620,12 @@ class SideBar(webapp2.RequestHandler):
             # Get the dropzone details based on the user
             dropzone_key = User.get_user(user.email()).dropzone
             dropzone = Dropzone.get_by_id(dropzone_key)
+            js=JumperStructure(dropzone_key)
+            load_key = self.request.get('load')
+            if load_key != "":
+                load_key=int(self.request.get('load'))
+            else:
+                load=0
         else:
             dropzone = DEFAULT_DROPZONE
         side_bar = self.request.get('side_bar')
@@ -631,6 +637,7 @@ class SideBar(webapp2.RequestHandler):
             'sales' : 'sales_sb.html',
             'users': 'users_sb.html',
             'none': 'none.html',
+            'manifest': 'manifest_sb.html',
         }
         if side_bar in case_type:
             response = case_type[side_bar]
@@ -640,7 +647,9 @@ class SideBar(webapp2.RequestHandler):
             'user_data': user_data,
             'dropzone': dropzone,
             'active': 0,
-            'dropzone_status': DROPZONE_STATUS
+            'dropzone_status': DROPZONE_STATUS,
+            'jumpers': js.jumpers,
+            'load': load_key,
         }
         template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))

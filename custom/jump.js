@@ -127,7 +127,9 @@ $('.form_time').datetimepicker({
 		minView: 0,
 		maxView: 1,
 		forceParse: 0
-})};
+});
+$('[data-toggle="popover"]').popover();
+};
 
 function new_submit(form_id,url) {
            // from https://stackoverflow.com/questions/18169933/submit-form-without-reloading-page

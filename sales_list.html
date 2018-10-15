@@ -1,9 +1,31 @@
-{% extends "manage.html" %}
-{% block title %}
-Manage Sales
-{% endblock %}
 
-{% block sidebar %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col-4"></th>
+            <th scope="col-4">Name</th>
+            <th scope="col-4">Jumps Remaining</th>
+        </tr>
+        </thead>
+        <tbody id="scroll-table">
+                    {% for key, sale in sales.iteritems() %}
+                    <tr>
+                        <td scope="col-4">
+                            {{loop.index}}
+                        </td>
+                        <td scope="col-4">
+                            {{sale.details.name}}
+                        </td>
+                        <td scope="col-4">
+                            {{sale.free}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+    </table>
+</div>
+
 <div class="btn-group dropright">
     <div class="btn-group dropright">
         <button type="button" class="btn btn-primary">
@@ -17,45 +39,8 @@ Manage Sales
             {% for package in packages %}
 
             <a class="dropdown-item"
-               href="/sales?dropzone={{dropzone.key.id()}}&jumper={{jumper_key}}&action=add&package={{package.key.id()}}">{{package.name}}</a>
+               onclick="main_post('/sales?dropzone={{dropzone.key.id()}}&jumper={{jumper_key}}&action=add&package={{package.key.id()}}')">{{package.name}}</a>
             {% endfor %}
         </div>
     </div>
 </div>
-{% endblock %}}
-
-{% block main %}
-
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead>
-        <tr class="row justify-content-between">
-            <th scope="col-4"></th>
-            <th scope="col-4">Name</th>
-            <th scope="col-4">Jumps Remaining</th>
-        </tr>
-        </thead>
-        <tbody id="scroll-table">
-                    {% for key, sale in sales.iteritems() %}
-                    <tr>
-                        <td>
-                            <div class="row">
-                                <div class="col">
-                                    {{loop.index}}
-                                </div>
-                                <div class="col">
-                                    {{sale.details.name}}
-                                </div>
-                                <div class="col">
-                                    {{sale.free}}
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-    </table>
-</div>
-{% endblock %}

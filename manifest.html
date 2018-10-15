@@ -1,30 +1,6 @@
-{% extends "manage.html" %}
-{% block title %}
-Manifest
-{% endblock %}
 
-{% block sidebar %}
-<div class="btn-group dropright">
-    <div class="btn-group dropright">
-        <button type="button" class="btn btn-primary">
-            Add Jumper
-        </button>
-        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
-            <span class="sr-only">Toggle Dropright</span>
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            {% for jumper_mega in jumpers %}
-            {% set jumper = jumper_mega[0] %}
-            <a class="dropdown-item"
-               href="/manifestaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&jumper={{jumper.key.id()}}&action=add">{{jumper.name}}</a>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endblock %}
 
-{% block main %}
+
 {% set slots = slot_mega[load.key.id()] %}
 <div class="card">
     <div class="card-body bg-primary text-white">
@@ -91,4 +67,3 @@ Manifest
                 </tbody>
     </table>
 </div>
-{% endblock %}

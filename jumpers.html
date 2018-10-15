@@ -93,15 +93,16 @@
         </div>
 
     </form>
-<form  id="sales-{{jumper.key.id()}}" method="get">
+<form  id="sales-{{jumper.key.id()}}" >
     <input type="hidden" name="dropzone" value="{{dropzone.key.id()}}" />
     <input type="hidden" name="jumper" value="{{jumper.key.id()}}"/>
+</form>
     <div class="form-group row">
             <div class="offset-4 col-8">
-                <button name="fetch" type="submit" form="sales-{{jumper.key.id()}}" class="btn btn-primary" formaction="/sales?action=fetch">Get Sales Packages</button>
+                <button name="fetch"   class="btn btn-primary" onclick="new_submit('sales-{{jumper.key.id()}}','/sales?action=fetch')">Get Sales Packages</button>
             </div>
     </div>
-</form>
+
 </div>
 {%endfor%}
 

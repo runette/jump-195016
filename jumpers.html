@@ -43,8 +43,8 @@
             <label for="email" class="col-4 col-form-label">Jumper email</label>
             <div class="col-8">
                 <div class="input-group">
-                    <input id="email" name="email" type="text" class="form-control here"
-                           required="required" value='{{jumper.email|replace("@gmail.com","")}}' disabled>
+                    <input id="email" name="email" type="text" class="form-control here search-group"
+                           required="required" value='{{jumper.email|replace("@gmail.com","")}}' disabled data-tab="list-{{jumper.key.id()}}-list">
                     <div class="input-group-append">
                                     <span class="input-group-text primary ">
                                         @gmail.com

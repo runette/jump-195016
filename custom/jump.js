@@ -203,3 +203,16 @@ function dropzone_refresh() {
         }
     })
 }
+
+function search_lists(input_name){
+    let elements = $('.search-group');
+    let text = $('#' + input_name).val();
+    for (i in elements) {
+        let element = elements[i];
+        if (element.value == text){
+            let list_active = element.dataset.tab;
+            $('#' + list_active).tab('show');
+            break
+        }
+    }
+}

@@ -19,6 +19,7 @@
 import webapp2
 
 import logging
+import json
 
 import datetime
 from data import *
@@ -68,8 +69,9 @@ class MainIndex(webapp2.RequestHandler):
             'user_data': user_data,
             'dropzone': dropzone,
             'active': 0,
-            'dropzone_status': DROPZONE_STATUS
+            'dropzone_status': DROPZONE_STATUS,
         }
+
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
         return
@@ -173,9 +175,10 @@ class ManageSales(webapp2.RequestHandler):
             'dropzone': dropzone,
             'active': 2,
             'dropzone_status': DROPZONE_STATUS,
-            'message':message,
         }
+        message_header = json.dump(message)
         template = JINJA_ENVIRONMENT.get_template('index.html')
+        self.response.headers.add('X-jump.tools-message',message_header)
         self.response.write(template.render(template_values))
 
 
@@ -232,7 +235,6 @@ class ManageLoads(webapp2.RequestHandler):
                 'dropzone': dropzone,
                 'loads': loads,
                 'slot_mega': slot_mega,
-                'message': message,
                 'slotsize': load_struct.freeslots(),
                 'active': 1,
                 'dropzone_status': DROPZONE_STATUS,
@@ -246,6 +248,8 @@ class ManageLoads(webapp2.RequestHandler):
                 'dropzone_status': DROPZONE_STATUS,
                 'dropzone' : DEFAULT_DROPZONE,
             }
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
 
@@ -254,13 +258,13 @@ class ManageLoads(webapp2.RequestHandler):
 class ManageManifest(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
+        message = {}
         if user_data['user']:
             # GET PARAMETERS
             dropzone_key = int(self.request.get('dropzone', DEFAULT_DROPZONE_ID))
             load_key = int(self.request.get('load', DEFAULT_LOAD_ID))
             action = self.request.get('action')
             jumper_key = int(self.request.get('jumper', "0"))
-            message = {}
             user = User.get_user(user_data['user'].email())
             # Set the Dropone details
             dropzone = Dropzone.get_by_id(dropzone_key)
@@ -287,7 +291,6 @@ class ManageManifest(webapp2.RequestHandler):
                 'slot_mega': slot_mega,
                 'slotsize': slot_size,
                 'jumpers': js.jumpers,
-                'message': message,
                 'active': 1,
                 'dropzone_status': DROPZONE_STATUS,
                 'load_status': LOAD_STATUS,
@@ -301,6 +304,8 @@ class ManageManifest(webapp2.RequestHandler):
                 'dropzone_status': DROPZONE_STATUS,
                 'dropzone': DEFAULT_DROPZONE,
             }
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render(template_values))
 
@@ -308,12 +313,12 @@ class ManageManifest(webapp2.RequestHandler):
 class ManageJumpers(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
+        message={}
         if user_data['user']:
             # GET PARAMETERS
             jumper_key = int(self.request.get('jumper', "0"))
             action = self.request.get('action')
             delete = self.request.get('delete')
-            message = {}
             user = User.get_user(user_data['user'].email())
             dropzone_key = int(self.request.get('dropzone'))
             dropzone = Dropzone.get_by_id(dropzone_key)
@@ -364,7 +369,6 @@ class ManageJumpers(webapp2.RequestHandler):
                 'dropzone': dropzone,
                 'registration': registrations,
                 'jumpers': js.jumpers,
-                'message': message,
                 'active': 3,
                 'dropzone_status': DROPZONE_STATUS,
                 'registration_status': REGISTRATION_STATUS,
@@ -377,6 +381,8 @@ class ManageJumpers(webapp2.RequestHandler):
                 'dropzone_status': DROPZONE_STATUS,
                 'dropzone': DEFAULT_DROPZONE,
             }
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
         template = JINJA_ENVIRONMENT.get_template('jumpers.html')
         self.response.write(template.render(template_values))
 
@@ -384,9 +390,9 @@ class ManageJumpers(webapp2.RequestHandler):
 class ManageDz(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
+        message = {}
         if user_data['user']:
             user = User.get_user(user_data['user'].email())
-            message = {}
             if user.role == ADMIN:
                 # Get the dropzone details based on the user
                 dropzone_key = int(self.request.get('dropzone'))
@@ -409,7 +415,6 @@ class ManageDz(webapp2.RequestHandler):
                 'user_data': user_data,
                 'dropzone': dropzone,
                 'users': User.get_by_dropzone(dropzone_key).fetch(),
-                'message': message,
                 'user_roles': USER_ROLES,
                 'role_colours': ROLE_COLOURS,
                 'active': 4,
@@ -426,6 +431,8 @@ class ManageDz(webapp2.RequestHandler):
                 'dropzone': DEFAULT_DROPZONE,
             }
             response = "index.html"
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
         template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))
         return
@@ -475,6 +482,7 @@ class UpdateUser(webapp2.RequestHandler):
                 # GET PARAMETERS
                 user_update = User.get_by_id(user_key)
                 if user_update:
+                    user_update.name = self.request.get('user_email')  + '@gmail.com'
                     user_update.role = int(self.request.get('user_role'))
                     user_update.dropzone = dropzone_key
                     user_update.put()
@@ -591,6 +599,8 @@ class RetimeLoads(webapp2.RequestHandler):
             'load_status': LOAD_STATUS,
             'load_colours': LOAD_COLOURS
         }
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
         template = JINJA_ENVIRONMENT.get_template('loads.html')
         self.response.write(template.render(template_values))
 
@@ -598,19 +608,37 @@ class NewDz(webapp2.RequestHandler):
     def post(self):
         user_data = UserStatus(self.request.uri)
         user = User.get_user(user_data['user'].email())
-        dropzone = Dropzone(name="New Dropzone",
-                default_load_time=0,
-                default_load_number=0,
-                default_slot_number=0,
-                status=CLOSED,
-                tag="",
-                kiosk_cols=1,
-                kiosk_rows=1,)
-        dropzone.put()
-        user.dropzone = dropzone.key.id()
-        user.role = ADMIN
-        user.put()
-        self.redirect('/configdz?dropzone=' + str(dropzone.key.id()) + '&action=dz')
+        if user:
+            dropzone = Dropzone(name="New Dropzone",
+                                default_load_time=0,
+                                default_load_number=0,
+                                default_slot_number=0,
+                                status=CLOSED,
+                                tag="",
+                                kiosk_cols=1,
+                                kiosk_rows=1, )
+            dropzone.put()
+            user.dropzone = dropzone.key.id()
+            user.role = ADMIN
+            user.put()
+        else:
+            dropzone = DEFAULT_DROPZONE
+        template_values = {
+            'user_data': user_data,
+            'dropzone': dropzone,
+            'active': 0,
+            'dropzone_status': DROPZONE_STATUS
+        }
+        message = {
+            'title': 'New Dropzone Created',
+            'body' : 'New dropzone has been created and linked to this user. Go to Congfigure / Dropzone Config to change the name and details',
+        }
+        message_header = json.dumps(message)
+        self.response.headers.add('X-jump.tools-message', message_header)
+        template = JINJA_ENVIRONMENT.get_template('manage.html')
+        self.response.write(template.render(template_values))
+        return
+
 
 class SideBar(webapp2.RequestHandler):
     def post(self):
@@ -654,3 +682,12 @@ class SideBar(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template(response)
         self.response.write(template.render(template_values))
         return
+
+class DzStat(webapp2.RequestHandler):
+    def post(self):
+        dropzone = Dropzone.get_by_id(int(self.request.get('dropzone')))
+        response = json.dumps({
+            'status': DROPZONE_STATUS[dropzone.status],
+            'colour': DROPZONE_COLOURS[dropzone.status],
+        })
+        self.response.write(response)

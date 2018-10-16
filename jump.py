@@ -31,6 +31,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route ('/client/config', handler=ClientConfig),
     webapp2.Route ('/client/load', handler=ClientLoads),
     webapp2.Route ('/client/logbook', handler=ClientLogbook),
-    webapp2.Route ('/sidebar', handler=SideBar)
+    webapp2.Route ('/sidebar', handler=SideBar),
+    webapp2.Route ('/dzstat', handler=DzStat)
 ], debug=True)
 

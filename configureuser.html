@@ -9,18 +9,16 @@
 <a class="list-group-item list-group-item-action {% if loop.index == 1 %} active {% endif%} "
    id="list-{{user.key.id()}}-list" data-toggle="list" href="#list-{{user.key.id()}}"
    role="tab" aria-controls="{{user.key.id()}}">
-    <div class="row justify-content-between">
-        <div class="col justify-content-left">
-            <h6 class="card-title">
-                {{user.name}}
-            </h6>
-        </div>
-        <div class="col justify-content-right">
-            <h6 class="card-title {{role_colours[user.role][0]}} {{role_colours[user.role][1]}} p-1">
-                {{user_roles[user.role]}}
-            </h6>
-        </div>
+    <div class="row">
+        <h6 class="card-title">
+            {{user.name}}
+        </h6>
     </div>
+    <div class="row">
+        <badge class="block {{role_colours[user.role][0]}} {{role_colours[user.role][1]}} p-1">
+            {{user_roles[user.role]}}
+        </badge>
+        </div>
 </a>
 {% endfor %}
 {% endblock %}
@@ -66,7 +64,7 @@
         </div>
     </form>
     <div class="offset-4 col-8">
-        <button name="delete" type="submit" class="btn btn-warning" formaction="/updateuser?action=delete">
+        <button name="delete" type="submit" class="btn btn-warning" onclick="new_submit('config-{{user.key.id()}}','/updateuser?action=delete')">
             Delete
         </button>
     </div>

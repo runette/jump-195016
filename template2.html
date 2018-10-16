@@ -1,4 +1,5 @@
 {% extends "template.html" %}
+
 {% set user = user_data['user'] %}
 {% block navbar_right %}
 
@@ -13,9 +14,6 @@
 {% block script %}
 {% include 'scripts.html' %}
 <script type="text/javascript">
-        $(function () {
-            $('[data-toggle="popover"]').popover();
-        });
         $(function() {
             google_init();
         });
@@ -23,7 +21,10 @@
             side_set('/index','/sidebar?side_bar=index', 'nav-1');
         });
         $(function () {
-            let myTimer = setInterval(main_refresh,10000)
+            let myTimer = setInterval(function () {
+                dropzone_refresh();
+                main_refresh()
+            }, 10000);
         })
     </script>
 {% endblock %}
@@ -31,15 +32,13 @@
 
 {% block main_exist %}
     {% if user %}
+    {% include "modal.html" %}
     {% block sidebar_exist %}
         <div class="col-3  bd-sidebar px-4" id="side_bar" data-spy="affix" data-offset-top="205">
             <div class="list-group">
             </div>
         </div>
     {% endblock %}
-<script type="text/javascript">
-
-</script>
     <main class="col-9 m-0" id="main_block">
     </main>
     {% endif %}

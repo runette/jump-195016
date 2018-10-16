@@ -11,6 +11,7 @@ import jinja2
 
 
 DROPZONE_STATUS = ["Open", "Closed"]
+DROPZONE_COLOURS = [("badge-success", ""), ("badge-warning", "")]
 OPEN = 0
 CLOSED = 1
 DEFAULT_DROPZONE_NAME = "No Dropzone"

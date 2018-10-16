@@ -63,11 +63,13 @@ function menu_set(active){
 
 function main_post(url) {
     let main_block  = $('#main_block')[0];
+    before_refresh();
     post(main_block,url);
 };
 
 function side_post(url) {
     let side_bar = $('#side_bar')[0];
+    before_refresh();
     post(side_bar,url);
 };
 
@@ -77,8 +79,9 @@ function post(element, url){
         if (this.readyState == 4 && this.status == 200) {
             if (this.responseText != '') {
                 let response = (this.responseText);
+                let message = this.getResponseHeader('X-jump.tools-message');
                 element.innerHTML = response;
-                after_refresh();
+                after_refresh(message);
             }
             }
         };
@@ -90,13 +93,14 @@ function post(element, url){
 function main_refresh(){
     let main_block  = $('#main_block')[0];
     let url = main_block.dataset.source;
-    auto_flag = main_block.dataset.auto;
+    let auto_flag = main_block.dataset.auto;
     if ( auto_flag == 'true' ) {
+        before_refresh();
         main_post(url);
     }
 };
 
-function after_refresh() {
+function after_refresh(message) {
 $('.form_datetime').datetimepicker({
         //language:  'en',
         weekStart: 1,
@@ -128,21 +132,74 @@ $('.form_time').datetimepicker({
 		maxView: 1,
 		forceParse: 0
 });
+
 $('[data-toggle="popover"]').popover();
+
+if (list_flag) {
+            $('#' + list_active).tab('show')
+        };
+
+if (message ) {
+            if (message != "{}") {
+                let message_object = JSON.parse(message);
+                $('#MessageModalLabel').text(message_object['title']);
+                $('#ModalBody').text(message_object['body']);
+                $('#MessageModal').modal('show')
+            }
+}
+       else {
+            $('#MessageModal').modal('hide')
+}
 };
 
 function new_submit(form_id,url) {
            // from https://stackoverflow.com/questions/18169933/submit-form-without-reloading-page
-           $.ajax({
+           before_refresh();
+            $.ajax({
              type: 'post',
              url: url,
              data: $('#' + form_id).serialize(),
-             success: function(data)
+             success: function(data,status, request)
              {
                  $('#main_block')[0].innerHTML = data;
-                 after_refresh()
+                 message = request.getResponseHeader('X-jump.tools-message');
+                 after_refresh(message)
              }
          });
             return false ;
 }
 
+function before_refresh(){
+    list_flag = false;
+        list_active = "";
+        let list_items = $('.list-group-item-action');
+        for (i in list_items) {
+            let item = list_items[i];
+            for (i in item.classList) {
+                let c = item.classList[i];
+                if (c == 'active') {
+                    list_active = item.id;
+                    list_flag = true;
+                    break
+                }
+                if (list_flag == true){break}
+            }
+        }
+}
+
+
+
+function dropzone_refresh() {
+    let dropzone_badge = $('#dropzone')[0];
+    let dropzone = dropzone_badge.dataset.dropzone;
+    $.ajax({
+        type: 'post',
+        url: '/dzstat?dropzone=' + dropzone,
+        success: function (data) {
+            response = JSON.parse(data);
+            dropzone_badge.innerText = response['status']   ;
+            dropzone_badge.classList.remove('badge-warning', 'badge-success');
+            dropzone_badge.classList.add(response['colour'][0]);
+        }
+    })
+}

@@ -40,7 +40,7 @@ Today's Manifest
                onclick="main_post('/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=hold')">Hold Load</a>
             <a class="dropdown-item"
                onclick="main_post('/loadaction?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}&action=delete')">Delete</a>
-            <a class="dropdown-item" onclick="side_set('/manifest?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}', '/sidebar?side_bar=manifest&load={{load.key.id()}}','nav-2', false)">Manifest</a>
+            <a class="dropdown-item" onclick="side_set('/manifest?dropzone={{dropzone.key.id()}}&load={{load.key.id()}}', '/sidebar?side_bar=manifest&load={{load.key.id()}}','nav-2', true)">Manifest</a>
         </div>
     </div>
     {% if load.status in (0,2) %}
@@ -132,3 +132,4 @@ Today's Manifest
 </div>
 {% endfor %}
 {% endblock %}
+

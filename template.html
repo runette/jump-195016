@@ -33,7 +33,7 @@
       <span class="navbar-brand pr-5">
             {{dropzone.name}} - {{dropzone.tag}}
         </span>
-      <span class="badge {% if dropzone.status == 0 %}badge-success {% else %}badge-warning {% endif %} pr-5">
+      <span class="badge {% if dropzone.status == 0 %}badge-success {% else %}badge-warning {% endif %} pr-5" id="dropzone" data-dropzone="{{dropzone.key.id()}}">
             {{dropzone_status[dropzone.status]}}
         </span>
       {% endif %}

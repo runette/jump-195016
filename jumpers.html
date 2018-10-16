@@ -1,5 +1,9 @@
 {% extends "twolist.html" %}
 
+{% block heading %}
+Jumper Configuration
+{% endblock %}
+
 {% block list_group %}
 {% for jumper_mega in jumpers %}
 {% set jumper = jumper_mega[0] %}

@@ -325,7 +325,7 @@ class LoadStructure:
                 next_load.put()
         load.key.delete()
         for manifest in manifests:
-            manifest.key.delete()
+            self.delete_manifest(load.key.id(),manifest)
         # Have to refresh loads to reset the memcache and to avoid re-inserting the deleted load
         self.refresh()
         # Retime all loads
@@ -354,8 +354,13 @@ class LoadStructure:
                 break
         return message
 
-    def delete_manifest(self, load_key, jumper_key):
+    def delete_manifest_by_user(self, load_key, jumper_key):
         manifest = Manifest.query(Manifest.load == load_key, Manifest.jumper == jumper_key).get()
+        self.delete_manifest(load_key,manifest)
+
+
+    def delete_manifest(self, load_key, manifest):
+        jumper_key = manifest.jumper
         slots = self.slot_mega[load_key]
         jumper = Jumper.get_by_id(jumper_key)
         sm=SalesMega(self.dropzone_key, jumper_key)
@@ -404,7 +409,7 @@ class LoadStructure:
                         load.status] + "\""})
         if action == "delete":
             if load.status in [WAITING, HOLD]:
-                self.delete_manifest(load.key.id(), registration.jumper)
+                self.delete_manifest_by_user(load.key.id(), registration.jumper)
             else:
                 message.update({'title': "Cannot Delete"})
                 message.update(

@@ -58,7 +58,7 @@ function menu_set(active, url){
                 alert(err)
         }
         $('.collapse').collapse('hide');
-        history.pushState({}, 'Title: Jump.tools', url);
+        history.pushState({}, 'Title: Jump.tools', url); // https://stackoverflow.com/questions/30990027/back-button-redirect-script
 
 };
 

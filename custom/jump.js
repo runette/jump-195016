@@ -23,7 +23,7 @@ function google_init() {
 };
 
 function main_set(url,active, auto){
-        menu_set(active);
+        menu_set(active, '/');
         main_post(url);
         main_block = $('#main_block')[0];
         main_block.dataset.source = url;
@@ -31,7 +31,7 @@ function main_set(url,active, auto){
 };
 
 function side_set(url_main, url_sb, active, auto) {
-        menu_set(active);
+        menu_set(active, '/' );
         side_post(url_sb);
         main_post(url_main);
         main_block = $('#main_block')[0];
@@ -39,7 +39,7 @@ function side_set(url_main, url_sb, active, auto) {
         main_block.dataset.auto = auto;
 };
 
-function menu_set(active){
+function menu_set(active, url){
         let navs = $('.nav-link');
         for (i = 0; i < navs.length; i++) {
             let nav = navs[i];
@@ -58,6 +58,7 @@ function menu_set(active){
                 alert(err)
         }
         $('.collapse').collapse('hide');
+        history.pushState({}, 'Title: Jump.tools', url);
 
 };
 

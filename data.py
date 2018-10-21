@@ -148,7 +148,6 @@ class User(ndb.Model):
                 name=name,
                 dropzone=DEFAULT_DROPZONE_ID,
             )
-            user.put()
             return user
 
     @classmethod
